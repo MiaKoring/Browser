@@ -1,0 +1,40 @@
+//
+//  MainBackground.swift
+//  Browser
+//
+//  Created by Mia Koring on 27.11.24.
+//
+
+import SwiftUI
+
+struct BackgroundView<C: View>: View {
+    let content: C
+    let background: AngularGradient
+    @State var rotation: Double = 0
+    @Environment(\.accessibilityReduceMotion) var reduceMotion
+
+    init(_ background: AngularGradient? = nil, @ViewBuilder content: () -> C) {
+        self.content = content()
+        self.background = background ?? AngularGradient(stops:[.init(color: .myPurple, location: 0), .init(color: .myPurple.mix(with: .white, by: 0.07), location: 0.5), .init(color: .myPurple, location: 1)], center: .center)
+    }
+
+    var body: some View {
+        ZStack {
+            GeometryReader { reader in
+                background
+                    .rotationEffect(.degrees(rotation))
+                    .onAppear() {
+                        if UDKey.animateBackground.boolValue && !reduceMotion {
+                            withAnimation(.linear(duration: 30).repeatForever(autoreverses: false)) {
+                                rotation = 360
+                            }
+                        }
+                    }
+                    .frame(width: max(reader.size.width, reader.size.height) * 2, height: max(reader.size.width, reader.size.height) * 2)
+                    .offset(x: -1 * max(reader.size.width, reader.size.height) / 2, y: -1 * max(reader.size.width, reader.size.height) / 2)
+            }
+
+            content
+        }
+    }
+}
