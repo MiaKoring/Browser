@@ -6,6 +6,6 @@
 //
 
 enum UDKey: String, CaseIterable, UserDefaultWrapper {
-    case animateBackground
+    case dontAnimateBackground
     case searchEngine
 }

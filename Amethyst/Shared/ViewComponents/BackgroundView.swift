@@ -24,7 +24,7 @@ struct BackgroundView<C: View>: View {
                 background
                     .rotationEffect(.degrees(rotation))
                     .onAppear() {
-                        if UDKey.animateBackground.boolValue && !reduceMotion {
+                        if !UDKey.dontAnimateBackground.boolValue && !reduceMotion {
                             withAnimation(.linear(duration: 30).repeatForever(autoreverses: false)) {
                                 rotation = 360
                             }

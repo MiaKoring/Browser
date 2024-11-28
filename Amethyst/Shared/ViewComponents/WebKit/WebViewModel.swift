@@ -13,6 +13,7 @@ class WebViewModel: ObservableObject {
     @Published var canGoForward: Bool = false
     @Published var currentURL: URL? = nil
     @Published var isLoading: Bool = false
+    @Published var title: String? = nil
     
     private var webView: WKWebView
     private var cancellables: Set<AnyCancellable> = []
@@ -30,6 +31,19 @@ class WebViewModel: ObservableObject {
         self.webView.underPageBackgroundColor = .myPurple
         setupBindings()
     }
+    
+    func goBack() {
+        if canGoBack {
+            webView.goBack()
+        }
+    }
+    
+    func goForward() {
+        if canGoForward {
+            webView.goForward()
+        }
+    }
+
     
     func getWebView() -> WKWebView {
         return webView
@@ -56,5 +70,8 @@ class WebViewModel: ObservableObject {
         webView.publisher(for: \.isLoading)
             .receive(on: DispatchQueue.main)
             .assign(to: &$isLoading)
+        webView.publisher(for: \.title)
+            .receive(on: DispatchQueue.main)
+            .assign(to: &$title)
     }
 }
