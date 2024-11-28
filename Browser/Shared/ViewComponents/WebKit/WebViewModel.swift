@@ -22,6 +22,9 @@ class WebViewModel: ObservableObject {
         webConfiguration.applicationNameForUserAgent = "Mozilla/5.0 (Macintosh; Apple Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Version/13.1 Safari/537.36"
         webConfiguration.defaultWebpagePreferences.allowsContentJavaScript = true
         webConfiguration.allowsInlinePredictions = true
+        webConfiguration.allowsAirPlayForMediaPlayback = true
+        webConfiguration.mediaTypesRequiringUserActionForPlayback = []
+        webConfiguration.suppressesIncrementalRendering = false
         self.webView = WKWebView(frame: .zero, configuration: webConfiguration)
         self.webView.allowsBackForwardNavigationGestures = false
         self.webView.underPageBackgroundColor = .myPurple

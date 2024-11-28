@@ -7,7 +7,17 @@
 
 import WebKit
 
-struct Tab {
+struct WKTab {
+    var title: String
     var url: URL
-    var interactionState: 
+    var backForwardList: WKBackForwardList
+    var canGoBack: Bool
+    var canGoForward: Bool
+    var interactionState: Any?
+    var magnification: CGFloat
+    var pageZoom: CGFloat
+    var selectedRanges: [NSValue]
+    var microphoneCaptureState: WKMediaCaptureState
+    var cameraCaptureState: WKMediaCaptureState
+    var mediaPlaybackState: WKMediaPlaybackState
 }

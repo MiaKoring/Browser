@@ -10,9 +10,33 @@
 		A64A1EE12CF6936B003B8875 /* Browser.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Browser.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		A673270C2CF8835500B88871 /* Exceptions for "Browser" folder in "Browser" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Shared/ViewComponents/TabView/ATabView.swift,
+			);
+			target = A64A1EE02CF6936B003B8875 /* Browser */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
+/* Begin PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet section */
+		A673270D2CF8835500B88871 /* Exceptions for "Browser" folder in "Copy Bundle Resources" phase from "Browser" target */ = {
+			isa = PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet;
+			buildPhase = A64A1EDF2CF6936B003B8875 /* Resources */;
+			membershipExceptions = (
+				Shared/ViewComponents/TabView/ATabView.swift,
+			);
+		};
+/* End PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		A64A1EE32CF6936B003B8875 /* Browser */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				A673270C2CF8835500B88871 /* Exceptions for "Browser" folder in "Browser" target */,
+				A673270D2CF8835500B88871 /* Exceptions for "Browser" folder in "Copy Bundle Resources" phase from "Browser" target */,
+			);
 			path = Browser;
 			sourceTree = "<group>";
 		};
@@ -85,7 +109,7 @@
 					};
 				};
 			};
-			buildConfigurationList = A64A1EDC2CF6936B003B8875 /* Build configuration list for PBXProject "Browser" */;
+			buildConfigurationList = A64A1EDC2CF6936B003B8875 /* Build configuration list for PBXProject "Amethyst" */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -317,7 +341,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		A64A1EDC2CF6936B003B8875 /* Build configuration list for PBXProject "Browser" */ = {
+		A64A1EDC2CF6936B003B8875 /* Build configuration list for PBXProject "Amethyst" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				A64A1EED2CF6936C003B8875 /* Debug */,
