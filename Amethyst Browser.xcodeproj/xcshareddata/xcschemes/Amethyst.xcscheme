@@ -16,9 +16,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "A64A1EE02CF6936B003B8875"
-               BuildableName = "Amethyst.app"
-               BlueprintName = "Amethyst"
-               ReferencedContainer = "container:Amethyst.xcodeproj">
+               BuildableName = "Amethyst Browser.app"
+               BlueprintName = "Amethyst Browser"
+               ReferencedContainer = "container:Amethyst Browser.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -45,9 +45,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "A64A1EE02CF6936B003B8875"
-            BuildableName = "Amethyst.app"
-            BlueprintName = "Amethyst"
-            ReferencedContainer = "container:Amethyst.xcodeproj">
+            BuildableName = "Amethyst Browser.app"
+            BlueprintName = "Amethyst Browser"
+            ReferencedContainer = "container:Amethyst Browser.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </LaunchAction>
@@ -62,9 +62,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "A64A1EE02CF6936B003B8875"
-            BuildableName = "Amethyst.app"
-            BlueprintName = "Amethyst"
-            ReferencedContainer = "container:Amethyst.xcodeproj">
+            BuildableName = "Amethyst Browser.app"
+            BlueprintName = "Amethyst Browser"
+            ReferencedContainer = "container:Amethyst Browser.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </ProfileAction>

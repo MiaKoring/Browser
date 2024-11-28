@@ -14,7 +14,7 @@ struct AmethystApp: App {
     
     
     var body: some Scene {
-        Window("Amethyst", id: "ioi") {
+        Window("Amethyst Browser", id: "ioi") {
             ContentView()
                 .frame(minWidth: 600, minHeight: 400)
                 .ignoresSafeArea(.container, edges: .top)
