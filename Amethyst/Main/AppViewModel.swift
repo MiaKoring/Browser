@@ -8,7 +8,7 @@ import SwiftUI
 import WebKit
 
 @Observable
-class AppViewModel: NSObject {
+class AppViewModel: NSObject, ObservableObject {
     var triggerNewTab: Bool = false
     var isSidebarShown: Bool = false
     var isSidebarFixed: Bool = false

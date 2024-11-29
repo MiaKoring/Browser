@@ -44,10 +44,22 @@ struct AmethystApp: App {
             CommandGroup(after: .sidebar) {
                 Button("Toggle Sidebar") {
                     withAnimation(.linear(duration: 0.1)) {
-                        appViewModel.isSidebarShown.toggle()
+                        if appViewModel.isSidebarFixed {
+                            appViewModel.isSidebarFixed = false
+                            appViewModel.isSidebarShown = false
+                        } else {
+                            appViewModel.isSidebarShown.toggle()
+                        }
                     }
                 }
                 .keyboardShortcut("e", modifiers: .command)
+                Button("Fix Sidebar") {
+                    appViewModel.isSidebarShown = false
+                    withAnimation(.linear(duration: 0.1)) {
+                        appViewModel.isSidebarFixed.toggle()
+                    }
+                }
+                .keyboardShortcut("f", modifiers: [.command, .shift])
             }
             CommandMenu("Navigation") {
                 Button("New Tab") {
@@ -64,6 +76,40 @@ struct AmethystApp: App {
                     }
                     .keyboardShortcut("Ä", modifiers: .command)
                 }
+                Button("Previous Tab") {
+                    guard let index = appViewModel.tabs.firstIndex(where: {$0.id == appViewModel.currentTab}) else {
+                        appViewModel.currentTab = appViewModel.tabs[0].id
+                        return
+                    }
+                    appViewModel.currentTab = appViewModel.tabs[max(0, index - 1)].id
+                }
+                .keyboardShortcut("w", modifiers: .command)
+                .disabled(appViewModel.tabs.count < 1 || appViewModel.tabs.firstIndex(where: {$0.id == appViewModel.currentTab}) == 0)
+                Button("Next Tab") {
+                    guard let index = appViewModel.tabs.firstIndex(where: {$0.id == appViewModel.currentTab}) else {
+                        appViewModel.currentTab = appViewModel.tabs[appViewModel.tabs.count - 1].id
+                        return
+                    }
+                    appViewModel.currentTab = appViewModel.tabs[min(appViewModel.tabs.count - 1, index + 1)].id
+                }
+                .keyboardShortcut("s", modifiers: .command)
+                .disabled(appViewModel.tabs.count < 1 || appViewModel.tabs.firstIndex(where: {$0.id == appViewModel.currentTab}) == appViewModel.tabs.count - 1)
+                Button("Close current Tab") {
+                    guard let index = appViewModel.tabs.firstIndex(where: {$0.id == appViewModel.currentTab}) else { return }
+                    if appViewModel.tabs.count > 1 {
+                        let before = appViewModel.tabs[max(0, index - 1)].id
+                        let after = appViewModel.tabs[min(appViewModel.tabs.count - 1, index + 1)].id
+                        appViewModel.currentTab = before == appViewModel.currentTab ? after : before
+                    } else {
+                        appViewModel.currentTab = nil
+                    }
+                    withAnimation(.linear(duration: 0.2)) {
+                        appViewModel.tabs[index].webViewModel.deinitialize()
+                        appViewModel.tabs.remove(at: index)
+                    }
+                }
+                .keyboardShortcut("c", modifiers: .option)
+                .disabled(appViewModel.currentTab == nil)
             }
         }
     }

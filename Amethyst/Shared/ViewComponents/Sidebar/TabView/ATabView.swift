@@ -4,9 +4,11 @@ import SwiftUI
 extension ATabView: View {
     var body: some View {
         VStack {
-            ForEach(appViewModel.tabs, id: \.id) { tab in
+            List(appViewModel.tabs) { tab in
                 TabButton(id: tab.id, tabVM: tab.webViewModel)
+                    .listRowSeparator(.hidden)
             }
+            .scrollContentBackground(.hidden)
             Spacer()
         }
         .frame(maxHeight: .infinity)
@@ -20,10 +22,10 @@ extension ATabView: View {
         ContentView()
             .environment(appViewModel)
             .onAppear() {
-                let vm = WebViewModel(processPool: appViewModel.wkProcessPool)
+                let vm = WebViewModel(processPool: appViewModel.wkProcessPool, appViewModel: appViewModel)
                 vm.load(urlString: "https://google.com")
                 appViewModel.tabs.append(ATab(webViewModel: vm))
-                let vm1 = WebViewModel(processPool: appViewModel.wkProcessPool)
+                let vm1 = WebViewModel(processPool: appViewModel.wkProcessPool, appViewModel: appViewModel)
                 vm.load(urlString: "https://miakoring.de")
                 appViewModel.tabs.append(ATab(webViewModel: vm1))
                 appViewModel.currentTab = appViewModel.tabs.first!.id

@@ -35,7 +35,7 @@ extension TabOpener {
             guard let _ = text.wholeMatch(of: Regexpr.urlWithoutProtocol.regex) else {
                 let searchEngine = SearchEngine(rawValue: UDKey.searchEngine.intValue) ?? .duckduckgo
                 let url = searchEngine.makeSearchUrl(text)
-                let vm = WebViewModel(processPool: appViewModel.wkProcessPool)
+                let vm = WebViewModel(processPool: appViewModel.wkProcessPool, appViewModel: appViewModel)
                 vm.load(urlString: url?.absoluteString ?? "")
                 if let tabID {
                     guard let index = appViewModel.tabs.firstIndex(where: {$0.id == tabID}) else {
@@ -49,7 +49,7 @@ extension TabOpener {
                 }
                 return
             }
-            let vm = WebViewModel(processPool: appViewModel.wkProcessPool)
+            let vm = WebViewModel(processPool: appViewModel.wkProcessPool, appViewModel: appViewModel)
             vm.load(urlString: "https://\(text)")
             if let tabID {
                 guard let index = appViewModel.tabs.firstIndex(where: {$0.id == tabID}) else {
@@ -63,7 +63,7 @@ extension TabOpener {
             }
             return
         }
-        let vm = WebViewModel(processPool: appViewModel.wkProcessPool)
+        let vm = WebViewModel(processPool: appViewModel.wkProcessPool, appViewModel: appViewModel)
         vm.load(urlString: text)
         if let tabID {
             guard let index = appViewModel.tabs.firstIndex(where: {$0.id == tabID}) else {

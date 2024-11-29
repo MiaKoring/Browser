@@ -12,6 +12,8 @@ struct ContentView {
     @Environment(\.modelContext) var context: ModelContext
     @State var showInputBar: Bool = false
     @State var inputBarText: String = ""
-    @State var sidebarWidth: CGFloat = 300
+    @State var sidebarWidth: CGFloat = 308
+    @State var showMacosWindowIconsAreaHovered: Bool = false
+    @State var macosWindowIconsHovered: Bool = false
 }
 

@@ -55,6 +55,9 @@ extension URLDisplay: View {
                 showTextField = false
             }
         }
+        .onChange(of: appViewModel.currentTab) {
+            showTextField = false
+        }
     }
     
     struct Display: View {
@@ -64,6 +67,9 @@ extension URLDisplay: View {
             VStack {
                 if let currentUrl = webViewModel.currentURL {
                     Text(currentUrl.host() ?? "Loading...")
+                        .onAppear {
+                            url = currentUrl.absoluteString
+                        }
                 } else {
                     Text("Loading...")
                 }

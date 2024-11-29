@@ -16,6 +16,19 @@ extension ContentView: View, TabOpener {
         GeometryReader { reader in
             BackgroundView {
                 ZStack {
+                    VStack {
+                        HStack {
+                            Rectangle()
+                                .fill(.clear)
+                                .frame(width: 20, height: 20)
+                                .contentShape(Rectangle())
+                                .onHover { hovering in
+                                    showMacosWindowIconsAreaHovered = hovering
+                                }
+                            Spacer()
+                        }
+                        Spacer()
+                    }
                     HStack(spacing: -1) {
                         if appViewModel.isSidebarFixed {
                             HStack {
@@ -68,6 +81,26 @@ extension ContentView: View, TabOpener {
                         }
                         Spacer()
                     }
+                    if (showMacosWindowIconsAreaHovered || macosWindowIconsHovered) && !appViewModel.isSidebarShown && !appViewModel.isSidebarFixed {
+                        
+                        VStack {
+                            HStack {
+                                MacOSButtons()
+                                    .padding(10)
+                                    .background {
+                                        RoundedRectangle(cornerRadius: 10)
+                                            .fill(.regularMaterial)
+                                            .background(Color.myPurple.opacity(0.2))
+                                            .clipShape(RoundedRectangle(cornerRadius: 10))
+                                    }
+                                    .onHover { hovering in
+                                        macosWindowIconsHovered = hovering
+                                    }
+                                Spacer()
+                            }
+                            Spacer()
+                        }
+                    }
                 }
             }
             .overlay {
@@ -98,7 +131,7 @@ extension ContentView: View, TabOpener {
                 do {
                     let savedTabs = try context.fetch(fetchDescriptor)
                     for savedTab in savedTabs {
-                        let vm = WebViewModel(processPool: appViewModel.wkProcessPool, restore: savedTab)
+                        let vm = WebViewModel(processPool: appViewModel.wkProcessPool, restore: savedTab, appViewModel: appViewModel)
                         appViewModel.tabs.append(ATab(id: savedTab.id, webViewModel: vm))
                     }
                 } catch {

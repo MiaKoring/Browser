@@ -7,7 +7,7 @@
 
 import WebKit
 
-struct ATab: Hashable, Equatable {
+struct ATab: Hashable, Equatable, Identifiable {
     var id: UUID = UUID()
     var webViewModel: WebViewModel
     

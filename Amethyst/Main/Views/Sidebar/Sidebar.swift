@@ -67,7 +67,9 @@ extension Sidebar: View {
                         isNewTabHovered = hovering
                     }
                 }
+        
             ATabView()
+                .padding(-15)
         }
         .frame(maxHeight: .infinity)
         .frame(maxWidth: appViewModel.isSidebarFixed ? .infinity: 300)
@@ -107,7 +109,7 @@ extension Sidebar: View {
     }
     .environment(appViewModel)
     .onAppear() {
-        let vm = WebViewModel(processPool: appViewModel.wkProcessPool)
+        let vm = WebViewModel(processPool: appViewModel.wkProcessPool, appViewModel: appViewModel)
         vm.load(urlString: "https://miakoring.de")
         let tab = ATab(webViewModel: vm)
         appViewModel.tabs.append(tab)
