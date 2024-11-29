@@ -41,6 +41,32 @@ extension Sidebar: View {
             URLDisplay()
                 .padding(.top)
             Divider()
+            HStack {
+                Image(systemName: "plus")
+                Text("New Tab")
+                Spacer()
+            }
+                .allowsHitTesting(false)
+                .frame(maxWidth: .infinity)
+                .padding(10)
+                .background {
+                    HStack {
+                        if isNewTabHovered {
+                            RoundedRectangle(cornerRadius: 12)
+                                .fill(.white.opacity(0.1))
+                        } else {
+                            RoundedRectangle(cornerRadius: 12)
+                                .fill(.ultraThinMaterial)
+                                
+                        }
+                    }
+                    .onTapGesture {
+                        appViewModel.triggerNewTab.toggle()
+                    }
+                    .onHover { hovering in
+                        isNewTabHovered = hovering
+                    }
+                }
             ATabView()
         }
         .frame(maxHeight: .infinity)
@@ -81,7 +107,7 @@ extension Sidebar: View {
     }
     .environment(appViewModel)
     .onAppear() {
-        let vm = WebViewModel()
+        let vm = WebViewModel(processPool: appViewModel.wkProcessPool)
         vm.load(urlString: "https://miakoring.de")
         let tab = ATab(webViewModel: vm)
         appViewModel.tabs.append(tab)

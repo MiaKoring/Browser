@@ -20,10 +20,10 @@ extension ATabView: View {
         ContentView()
             .environment(appViewModel)
             .onAppear() {
-                let vm = WebViewModel()
+                let vm = WebViewModel(processPool: appViewModel.wkProcessPool)
                 vm.load(urlString: "https://google.com")
                 appViewModel.tabs.append(ATab(webViewModel: vm))
-                let vm1 = WebViewModel()
+                let vm1 = WebViewModel(processPool: appViewModel.wkProcessPool)
                 vm.load(urlString: "https://miakoring.de")
                 appViewModel.tabs.append(ATab(webViewModel: vm1))
                 appViewModel.currentTab = appViewModel.tabs.first!.id
@@ -46,28 +46,73 @@ struct TabButton: View {
         HStack {
             if let title = tabVM.title, !title.isEmpty {
                 Text(title)
+                    .lineLimit(1)
             } else {
                 Text(tabVM.currentURL?.absoluteString ?? "failed")
+                    .lineLimit(1)
             }
             Spacer()
         }
         .padding(10)
         .overlay {
-            if isHovered {
+            HStack(spacing: 0) {
+                Spacer()
                 HStack {
-                    Spacer()
+                    if tabVM.isUsingCamera == .active {
+                        Image(systemName: "camera.circle.fill")
+                            .padding(5)
+                            .background {
+                                Circle()
+                                    .fill(.ultraThinMaterial)
+                            }
+                    }
+                    if tabVM.isUsingCamera == .muted {
+                        Image(systemName: "arrow.trianglehead.2.clockwise.rotate.90.camera.fill")
+                            .padding(5)
+                            .background {
+                                Circle()
+                                    .fill(.ultraThinMaterial)
+                            }
+                    }
+                    if tabVM.isUsingMicrophone == .active {
+                        Image(systemName: "microphone.circle.fill")
+                            .padding(5)
+                            .background {
+                                Circle()
+                                    .fill(.ultraThinMaterial)
+                            }
+                    }
+                    if tabVM.isUsingMicrophone == .muted {
+                        Image(systemName: "microphone.slash.circle.fill")
+                            .padding(5)
+                            .background {
+                                Circle()
+                                    .fill(.ultraThinMaterial)
+                            }
+                    }
+                }
+                .font(.title2)
+                .foregroundStyle(.gray)
+                .padding(.trailing, 5)
+                if isHovered {
                     Button {
-                        let index = appViewModel.tabs.firstIndex(where: {$0.id == id}) ?? 0
-                        if appViewModel.tabs.count > 1 {
-                            appViewModel.currentTab = appViewModel.tabs[max(0, index - 1)].id
-                        } else {
-                            appViewModel.currentTab = nil
+                        if appViewModel.currentTab == id {
+                            let index = appViewModel.tabs.firstIndex(where: {$0.id == id}) ?? 0
+                            if appViewModel.tabs.count > 1 {
+                                let before = appViewModel.tabs[max(0, index - 1)].id
+                                let after = appViewModel.tabs[min(appViewModel.tabs.count - 1, index + 1)].id
+                                appViewModel.currentTab = before == id ? after : before
+                            } else {
+                                appViewModel.currentTab = nil
+                            }
                         }
                         withAnimation(.linear(duration: 0.2)) {
+                            appViewModel.tabs.first(where: {$0.id == id})?.webViewModel.deinitialize()
                             appViewModel.tabs.removeAll(where: {$0.id == id})
                         }
                     } label: {
                         Image(systemName: "xmark.square.fill")
+                            .font(.title2)
                             .foregroundStyle(.gray)
                     }
                     .buttonStyle(.plain)

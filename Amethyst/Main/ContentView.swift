@@ -4,12 +4,14 @@
 //
 //  Created by Mia Koring on 27.11.24.
 //
-
+import Combine
+import SwiftData
 import SwiftUI
 import WebKit
-import Combine
+
 
 extension ContentView: View, TabOpener {
+    
     var body: some View {
         GeometryReader { reader in
             BackgroundView {
@@ -80,6 +82,28 @@ extension ContentView: View, TabOpener {
             }
             .onChange(of: appViewModel.triggerNewTab) {
                 showInputBar = true
+            }
+            .onChange(of: appViewModel.tabs) {
+                if appViewModel.tabs.isEmpty {
+                    appViewModel.isSidebarShown = true
+                }
+            }
+            .onAppear() {
+                if appViewModel.tabs.isEmpty {
+                    appViewModel.isSidebarShown = true
+                }
+                let fetchDescriptor = FetchDescriptor<SavedTab>(predicate: #Predicate<SavedTab>{ tab in
+                    return true
+                }, sortBy: [SortDescriptor(\SavedTab.sortingID, order: .forward)])
+                do {
+                    let savedTabs = try context.fetch(fetchDescriptor)
+                    for savedTab in savedTabs {
+                        let vm = WebViewModel(processPool: appViewModel.wkProcessPool, restore: savedTab)
+                        appViewModel.tabs.append(ATab(id: savedTab.id, webViewModel: vm))
+                    }
+                } catch {
+                    print("failed to fetch saved tabs")
+                }
             }
         }
     }

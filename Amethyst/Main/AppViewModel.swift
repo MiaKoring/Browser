@@ -5,6 +5,7 @@
 //  Created by Mia Koring on 27.11.24.
 //
 import SwiftUI
+import WebKit
 
 @Observable
 class AppViewModel: NSObject {
@@ -13,4 +14,5 @@ class AppViewModel: NSObject {
     var isSidebarFixed: Bool = false
     var tabs: [ATab] = []
     var currentTab: UUID?
+    var wkProcessPool = WKProcessPool()
 }

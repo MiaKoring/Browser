@@ -6,9 +6,11 @@
 //
 
 import SwiftUI
+import SwiftData
 
-struct URLDisplay {
+struct URLDisplay: TabOpener {
     @Environment(AppViewModel.self) var appViewModel
+    @Environment(\.modelContext) var context: ModelContext
     @State var showTextField: Bool = false
     @State var text: String = ""
     @State var url: String = ""

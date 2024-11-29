@@ -6,7 +6,8 @@
 //
 import SwiftUI
 
-extension URLDisplay: View, TabOpener {
+extension URLDisplay: View {
+    
     var body: some View {
         VStack {
             if !showTextField {
@@ -15,7 +16,7 @@ extension URLDisplay: View, TabOpener {
                         Display(webViewModel: currentTab.webViewModel, url: $url)
                             .allowsHitTesting(false)
                     } else {
-                        Text("Select Tab")
+                        Text("Search or enter URL")
                             .allowsHitTesting(false)
                     }
                     Spacer()

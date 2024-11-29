@@ -7,17 +7,28 @@
 
 import SwiftUI
 import AppKit
+import SwiftData
+
 
 @main
 struct AmethystApp: App {
     @State var appViewModel = AppViewModel()
+    let container: ModelContainer
     
+    init() {
+        do {
+            container = try ModelContainer(for: SavedTab.self, migrationPlan: TabMigration.self)
+        } catch {
+            fatalError("failed to initialize model container")
+        }
+    }
     
     var body: some Scene {
         Window("Amethyst Browser", id: "ioi") {
             ContentView()
                 .frame(minWidth: 600, minHeight: 400)
                 .ignoresSafeArea(.container, edges: .top)
+                .modelContainer(container)
                 .onAppear {
                     if let window = NSApp.windows.first {
                         window.standardWindowButton(.closeButton)?.isHidden = true

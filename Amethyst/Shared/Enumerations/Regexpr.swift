@@ -7,4 +7,5 @@
 
 enum Regexpr {
     case url
+    case urlWithoutProtocol
 }
