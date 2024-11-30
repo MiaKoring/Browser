@@ -7,6 +7,7 @@
 import SwiftData
 
 protocol TabOpener {
+    var contentViewModel: ContentViewModel { get }
     var appViewModel: AppViewModel { get }
     var context: ModelContext { get }
 }

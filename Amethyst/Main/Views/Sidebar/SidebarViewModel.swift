@@ -7,6 +7,7 @@
 import SwiftUI
 
 struct Sidebar {
+    @Environment(ContentViewModel.self) var contentViewModel
     @Environment(AppViewModel.self) var appViewModel
     @State var isSideBarButtonHovered: Bool = false
     @State var isNewTabHovered: Bool = false

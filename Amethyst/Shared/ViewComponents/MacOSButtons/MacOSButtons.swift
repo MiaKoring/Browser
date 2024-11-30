@@ -8,13 +8,17 @@ import SwiftUI
 
 struct MacOSButtons: View {
     @State var isHovered: Bool = false
+    @Environment(ContentViewModel.self) var contentViewModel
+    @Environment(AppViewModel.self) var appViewModel
+    @Environment(\.dismissWindow) var dismissWindow
     var body: some View {
         HStack {
-            if let window = NSApplication.shared.windows.first {
+            if let window = NSApplication.shared.windows.first(where: {$0.identifier?.rawValue == contentViewModel.id}) {
                 Image(systemName: isHovered ? "xmark.circle.fill": "circle.fill")
                     .font(.system(size: 12))
                     .foregroundColor(.red)
                     .onTapGesture {
+                        self.appViewModel.displayedWindows.remove(window.identifier?.rawValue ?? "")
                         window.performClose(nil)
                     }
                 

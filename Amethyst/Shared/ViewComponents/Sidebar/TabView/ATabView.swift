@@ -4,7 +4,7 @@ import SwiftUI
 extension ATabView: View {
     var body: some View {
         VStack {
-            List(appViewModel.tabs) { tab in
+            List(contentViewModel.tabs) { tab in
                 TabButton(id: tab.id, tabVM: tab.webViewModel)
                     .listRowSeparator(.hidden)
             }
@@ -17,22 +17,24 @@ extension ATabView: View {
 
 
 #Preview {
+    @Previewable @State var contentViewModel = ContentViewModel(id: "lol")
     @Previewable @State var appViewModel = AppViewModel()
     ZStack {
         ContentView()
+            .environment(contentViewModel)
             .environment(appViewModel)
             .onAppear() {
-                let vm = WebViewModel(processPool: appViewModel.wkProcessPool, appViewModel: appViewModel)
+                let vm = WebViewModel(processPool: contentViewModel.wkProcessPool, contentViewModel: contentViewModel, appViewModel: appViewModel)
                 vm.load(urlString: "https://google.com")
-                appViewModel.tabs.append(ATab(webViewModel: vm))
-                let vm1 = WebViewModel(processPool: appViewModel.wkProcessPool, appViewModel: appViewModel)
+                contentViewModel.tabs.append(ATab(webViewModel: vm))
+                let vm1 = WebViewModel(processPool: contentViewModel.wkProcessPool, contentViewModel: contentViewModel, appViewModel: appViewModel)
                 vm.load(urlString: "https://miakoring.de")
-                appViewModel.tabs.append(ATab(webViewModel: vm1))
-                appViewModel.currentTab = appViewModel.tabs.first!.id
+                contentViewModel.tabs.append(ATab(webViewModel: vm1))
+                contentViewModel.currentTab = contentViewModel.tabs.first!.id
             }
         HStack {
             ATabView()
-                .environment(appViewModel)
+                .environment(contentViewModel)
             Spacer()
         }
     }
@@ -42,8 +44,9 @@ extension ATabView: View {
 struct TabButton: View {
     let id: UUID
     @ObservedObject var tabVM: WebViewModel
-    @State var isHovered: Bool = false
     @Environment(AppViewModel.self) var appViewModel
+    @State var isHovered: Bool = false
+    @Environment(ContentViewModel.self) var contentViewModel
     var body: some View {
         HStack {
             if let title = tabVM.title, !title.isEmpty {
@@ -98,19 +101,19 @@ struct TabButton: View {
                 .padding(.trailing, 5)
                 if isHovered {
                     Button {
-                        if appViewModel.currentTab == id {
-                            let index = appViewModel.tabs.firstIndex(where: {$0.id == id}) ?? 0
-                            if appViewModel.tabs.count > 1 {
-                                let before = appViewModel.tabs[max(0, index - 1)].id
-                                let after = appViewModel.tabs[min(appViewModel.tabs.count - 1, index + 1)].id
-                                appViewModel.currentTab = before == id ? after : before
+                        if contentViewModel.currentTab == id {
+                            let index = contentViewModel.tabs.firstIndex(where: {$0.id == id}) ?? 0
+                            if contentViewModel.tabs.count > 1 {
+                                let before = contentViewModel.tabs[max(0, index - 1)].id
+                                let after = contentViewModel.tabs[min(contentViewModel.tabs.count - 1, index + 1)].id
+                                contentViewModel.currentTab = before == id ? after : before
                             } else {
-                                appViewModel.currentTab = nil
+                                contentViewModel.currentTab = nil
                             }
                         }
                         withAnimation(.linear(duration: 0.2)) {
-                            appViewModel.tabs.first(where: {$0.id == id})?.webViewModel.deinitialize()
-                            appViewModel.tabs.removeAll(where: {$0.id == id})
+                            contentViewModel.tabs.first(where: {$0.id == id})?.webViewModel.deinitialize()
+                            contentViewModel.tabs.removeAll(where: {$0.id == id})
                         }
                     } label: {
                         Image(systemName: "xmark.square.fill")
@@ -124,7 +127,7 @@ struct TabButton: View {
         }
         .frame(maxWidth: .infinity)
         .background() {
-            if appViewModel.currentTab == id {
+            if contentViewModel.currentTab == id {
                 RoundedRectangle(cornerRadius: 12)
                     .fill(.white.opacity(0.2))
             } else {
@@ -143,7 +146,7 @@ struct TabButton: View {
             }
         }
         .onTapGesture {
-            appViewModel.currentTab = id
+            contentViewModel.currentTab = id
         }
     }
 }

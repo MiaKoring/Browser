@@ -7,5 +7,6 @@
 import SwiftUI
 
 struct ATabView {
+    @Environment(ContentViewModel.self) var contentViewModel
     @Environment(AppViewModel.self) var appViewModel
 }

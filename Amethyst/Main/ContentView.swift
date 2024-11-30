@@ -16,6 +16,21 @@ extension ContentView: View, TabOpener {
         GeometryReader { reader in
             BackgroundView {
                 ZStack {
+                    HostingWindowFinder { window in
+                        if let window {
+                            if let id = window.identifier {
+                                self.appViewModel.currentlyActiveWindowId = id.rawValue
+                                self.appViewModel.displayedWindows.insert(id.rawValue)
+                                print(id.rawValue)
+                            }
+                        }
+                    }
+                    if appViewModel.highlightedWindow == contentViewModel.id {
+                        RoundedRectangle(cornerRadius: 10)
+                            .stroke(lineWidth: 5)
+                            .foregroundStyle(.white)
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    }
                     VStack {
                         HStack {
                             Rectangle()
@@ -30,7 +45,7 @@ extension ContentView: View, TabOpener {
                         Spacer()
                     }
                     HStack(spacing: -1) {
-                        if appViewModel.isSidebarFixed {
+                        if contentViewModel.isSidebarFixed {
                             HStack {
                                 Sidebar()
                                     .frame(maxWidth: sidebarWidth)
@@ -60,28 +75,28 @@ extension ContentView: View, TabOpener {
                                             }
                                             .offset(x: 10)
                                     }
-                                if appViewModel.tabs.isEmpty {
+                                if contentViewModel.tabs.isEmpty {
                                     Spacer()
                                 }
                             }
                         }
                         ZStack {
-                            ForEach(appViewModel.tabs, id: \.self) { tab in
+                            ForEach(contentViewModel.tabs, id: \.self) { tab in
                                 WebView(viewModel: tab.webViewModel)
                                     .clipShape(RoundedRectangle(cornerRadius: 5))
                                     .padding(10)
-                                    .opacity(tab.id == appViewModel.currentTab ? 1 : 0)
+                                    .opacity(tab.id == contentViewModel.currentTab ? 1 : 0)
                             }
                         }
                     }
                     HStack {
-                        if appViewModel.isSidebarShown && !appViewModel.isSidebarFixed {
+                        if contentViewModel.isSidebarShown && !contentViewModel.isSidebarFixed {
                             Sidebar()
                                 .transition(.move(edge: .leading))
                         }
                         Spacer()
                     }
-                    if (showMacosWindowIconsAreaHovered || macosWindowIconsHovered) && !appViewModel.isSidebarShown && !appViewModel.isSidebarFixed {
+                    if (showMacosWindowIconsAreaHovered || macosWindowIconsHovered) && !contentViewModel.isSidebarShown && !contentViewModel.isSidebarFixed {
                         
                         VStack {
                             HStack {
@@ -113,32 +128,34 @@ extension ContentView: View, TabOpener {
                     .frame(maxWidth: max(550, min(reader.size.width / 2, 800)))
                 }
             }
-            .onChange(of: appViewModel.triggerNewTab) {
+            .onChange(of: contentViewModel.triggerNewTab) {
                 showInputBar = true
             }
-            .onChange(of: appViewModel.tabs) {
-                if appViewModel.tabs.isEmpty {
-                    appViewModel.isSidebarShown = true
+            .onChange(of: contentViewModel.tabs) {
+                if contentViewModel.tabs.isEmpty {
+                    contentViewModel.isSidebarShown = true
                 }
             }
             .onAppear() {
-                if appViewModel.tabs.isEmpty {
-                    appViewModel.isSidebarShown = true
+                if contentViewModel.tabs.isEmpty {
+                    contentViewModel.isSidebarShown = true
                 }
-                let fetchDescriptor = FetchDescriptor<SavedTab>(predicate: #Predicate<SavedTab>{ tab in
-                    return true
-                }, sortBy: [SortDescriptor(\SavedTab.sortingID, order: .forward)])
+                let id = contentViewModel.id
+                print(id)
+                let fetchDescriptor = FetchDescriptor(predicate: #Predicate<SavedTab>{ return $0.windowID == id}, sortBy: [SortDescriptor(\SavedTab.sortingID, order: .forward)])
                 do {
                     let savedTabs = try context.fetch(fetchDescriptor)
                     for savedTab in savedTabs {
-                        let vm = WebViewModel(processPool: appViewModel.wkProcessPool, restore: savedTab, appViewModel: appViewModel)
-                        appViewModel.tabs.append(ATab(id: savedTab.id, webViewModel: vm))
+                        let vm = WebViewModel(processPool: contentViewModel.wkProcessPool, restore: savedTab, contentViewModel: contentViewModel, appViewModel: appViewModel)
+                        contentViewModel.tabs.append(ATab(id: savedTab.id, webViewModel: vm))
                     }
                 } catch {
                     print("failed to fetch saved tabs")
                 }
             }
         }
+        .environment(contentViewModel)
+        .clipShape(RoundedRectangle(cornerRadius: 10))
     }
     
 }

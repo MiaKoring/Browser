@@ -13,4 +13,11 @@ extension SearchEngine {
             URL(string: "https://duckduckgo.com/?q=\(input.replacingOccurrences(of: " ", with: "+"))")
         }
     }
+    
+    var root: String {
+        switch self {
+        case .duckduckgo:
+            "https://duckduckgo.com"
+        }
+    }
 }

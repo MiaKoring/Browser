@@ -8,12 +8,20 @@
 import SwiftUI
 import AppKit
 import SwiftData
+import WebKit
 
 
 @main
 struct AmethystApp: App {
-    @State var appViewModel = AppViewModel()
+    @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
+    @Environment(\.openWindow) var openWindow
+    @State var appViewModel: AppViewModel
+    @State var contentViewModel = ContentViewModel(id: "window1")
+    @State var contentViewModel2 = ContentViewModel(id: "window2")
+    @State var contentViewModel3 = ContentViewModel(id: "window3")
     let container: ModelContainer
+    
+    
     
     init() {
         do {
@@ -21,96 +29,74 @@ struct AmethystApp: App {
         } catch {
             fatalError("failed to initialize model container")
         }
+        self.appViewModel = AppViewModel()
     }
     
+    
+    
     var body: some Scene {
-        Window("Amethyst Browser", id: "ioi") {
-            ContentView()
-                .frame(minWidth: 600, minHeight: 400)
-                .ignoresSafeArea(.container, edges: .top)
-                .modelContainer(container)
-                .onAppear {
-                    if let window = NSApp.windows.first {
-                        window.standardWindowButton(.closeButton)?.isHidden = true
-                        window.standardWindowButton(.miniaturizeButton)?.isHidden = true
-                        window.standardWindowButton(.zoomButton)?.isHidden = true
+        createWindow(id: "window1", viewModel: contentViewModel)
+        WindowGroup(id: "singleWindow", for: URL.self) { value in
+            if let _ = value.wrappedValue {
+                SingleFrame(appViewModel: appViewModel, url: value)
+                    .environment(appViewModel)
+                    .environment(contentViewModel)
+                    .onAppear() {
+                        onAppear()
                     }
-                }
-                .environment(appViewModel)
+                    .ignoresSafeArea()
+            }
         }
         .windowToolbarStyle(.unifiedCompact(showsTitle: false))
         .windowStyle(.hiddenTitleBar)
+        createWindow(id: "window2", viewModel: contentViewModel2)
+        createWindow(id: "window3", viewModel: contentViewModel3)
         .commands {
+            CommandGroup(replacing: .newItem) {
+                Button("New Window") {
+                    createNewWindow()
+                }.keyboardShortcut("N", modifiers: [.command])
+            }
             CommandGroup(after: .sidebar) {
                 Button("Toggle Sidebar") {
-                    withAnimation(.linear(duration: 0.1)) {
-                        if appViewModel.isSidebarFixed {
-                            appViewModel.isSidebarFixed = false
-                            appViewModel.isSidebarShown = false
-                        } else {
-                            appViewModel.isSidebarShown.toggle()
-                        }
-                    }
+                    toggleSidebar()
                 }
                 .keyboardShortcut("e", modifiers: .command)
                 Button("Fix Sidebar") {
-                    appViewModel.isSidebarShown = false
-                    withAnimation(.linear(duration: 0.1)) {
-                        appViewModel.isSidebarFixed.toggle()
-                    }
+                    toggleSidebar(fix: true)
                 }
-                .keyboardShortcut("f", modifiers: [.command, .shift])
+                .keyboardShortcut("e", modifiers: [.command, .shift])
             }
             CommandMenu("Navigation") {
                 Button("New Tab") {
-                    appViewModel.triggerNewTab.toggle()
+                    newTab()
                 }
                 .keyboardShortcut("t", modifiers: .command)
-                if let model = appViewModel.tabs.first(where: {$0.id == appViewModel.currentTab})?.webViewModel {
-                    Button("Go Back") {
-                        model.goBack()
-                    }
-                    .keyboardShortcut("Ö", modifiers: .command)
-                    Button("Go Forward") {
-                        model.goForward()
-                    }
-                    .keyboardShortcut("Ä", modifiers: .command)
+                Button("Go Back") {
+                    navigate()
                 }
+                .keyboardShortcut("Ö", modifiers: .command)
+                Button("Go Forward") {
+                    navigate(back: false)
+                }
+                .keyboardShortcut("Ä", modifiers: .command)
                 Button("Previous Tab") {
-                    guard let index = appViewModel.tabs.firstIndex(where: {$0.id == appViewModel.currentTab}) else {
-                        appViewModel.currentTab = appViewModel.tabs[0].id
-                        return
-                    }
-                    appViewModel.currentTab = appViewModel.tabs[max(0, index - 1)].id
+                    navigateTabs()
                 }
-                .keyboardShortcut("w", modifiers: .command)
-                .disabled(appViewModel.tabs.count < 1 || appViewModel.tabs.firstIndex(where: {$0.id == appViewModel.currentTab}) == 0)
+                .keyboardShortcut("w", modifiers: [.command, .shift])
+                .disabled(tabSwitchingDisabled())
                 Button("Next Tab") {
-                    guard let index = appViewModel.tabs.firstIndex(where: {$0.id == appViewModel.currentTab}) else {
-                        appViewModel.currentTab = appViewModel.tabs[appViewModel.tabs.count - 1].id
-                        return
-                    }
-                    appViewModel.currentTab = appViewModel.tabs[min(appViewModel.tabs.count - 1, index + 1)].id
+                    navigateTabs(back: false)
                 }
-                .keyboardShortcut("s", modifiers: .command)
-                .disabled(appViewModel.tabs.count < 1 || appViewModel.tabs.firstIndex(where: {$0.id == appViewModel.currentTab}) == appViewModel.tabs.count - 1)
+                .keyboardShortcut("s", modifiers: [.command, .shift])
+                .disabled(tabSwitchingDisabled(back: false))
                 Button("Close current Tab") {
-                    guard let index = appViewModel.tabs.firstIndex(where: {$0.id == appViewModel.currentTab}) else { return }
-                    if appViewModel.tabs.count > 1 {
-                        let before = appViewModel.tabs[max(0, index - 1)].id
-                        let after = appViewModel.tabs[min(appViewModel.tabs.count - 1, index + 1)].id
-                        appViewModel.currentTab = before == appViewModel.currentTab ? after : before
-                    } else {
-                        appViewModel.currentTab = nil
-                    }
-                    withAnimation(.linear(duration: 0.2)) {
-                        appViewModel.tabs[index].webViewModel.deinitialize()
-                        appViewModel.tabs.remove(at: index)
-                    }
+                    closeCurrentTab()
                 }
                 .keyboardShortcut("c", modifiers: .option)
-                .disabled(appViewModel.currentTab == nil)
+                .disabled(contentViewModel(for: appViewModel.currentlyActiveWindowId)?.currentTab == nil)
             }
         }
     }
 }
+

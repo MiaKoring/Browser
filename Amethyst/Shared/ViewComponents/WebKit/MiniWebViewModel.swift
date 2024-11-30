@@ -1,31 +1,28 @@
 //
-//  WebViewModel.swift
-//  Browser
+//  MiniWebViewModel.swift
+//  Amethyst Browser
 //
-//  Created by Mia Koring on 27.11.24.
+//  Created by Mia Koring on 30.11.24.
 //
+
 import SwiftUI
 import WebKit
 import Combine
 
-class WebViewModel: NSObject, ObservableObject {
+class MiniWebViewModel: NSObject, ObservableObject {
+    @Published var currentURL: URL? = nil
     @Published var canGoBack: Bool = false
     @Published var canGoForward: Bool = false
-    @Published var currentURL: URL? = nil
     @Published var isLoading: Bool = false
     @Published var title: String? = nil
     @Published var isUsingCamera: WKMediaCaptureState = .none
     @Published var isUsingMicrophone: WKMediaCaptureState = .none
-    @ObservedObject var contentViewModel: ContentViewModel
     @ObservedObject var appViewModel: AppViewModel
     
     private var webView: AWKWebView?
     private var cancellables: Set<AnyCancellable> = []
-    private var processPool: WKProcessPool
     
-    init(processPool: WKProcessPool, contentViewModel: ContentViewModel, appViewModel: AppViewModel) {
-        self.processPool = processPool
-        self.contentViewModel = contentViewModel
+    init(appViewModel: AppViewModel) {
         self.appViewModel = appViewModel
         super.init()
         
@@ -36,50 +33,11 @@ class WebViewModel: NSObject, ObservableObject {
         webConfiguration.allowsAirPlayForMediaPlayback = true
         webConfiguration.mediaTypesRequiringUserActionForPlayback = []
         webConfiguration.suppressesIncrementalRendering = false
-        webConfiguration.processPool = processPool
         webConfiguration.preferences.javaScriptCanOpenWindowsAutomatically = true
         self.webView = AWKWebView(frame: .zero, configuration: webConfiguration)
         self.webView?.allowsBackForwardNavigationGestures = false
         self.webView?.underPageBackgroundColor = .myPurple
         self.webView?.uiDelegate = self
-        setupBindings()
-    }
-    
-    init(processPool: WKProcessPool, restore tab: SavedTab, contentViewModel: ContentViewModel, appViewModel: AppViewModel) {
-        self.processPool = processPool
-        self.contentViewModel = contentViewModel
-        self.appViewModel = appViewModel
-        super.init()
-        let webConfiguration = WKWebViewConfiguration()
-        webConfiguration.applicationNameForUserAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.1.1 Safari/605.1.15"
-        webConfiguration.defaultWebpagePreferences.allowsContentJavaScript = true
-        webConfiguration.allowsInlinePredictions = true
-        webConfiguration.allowsAirPlayForMediaPlayback = true
-        webConfiguration.mediaTypesRequiringUserActionForPlayback = []
-        webConfiguration.suppressesIncrementalRendering = false
-        webConfiguration.processPool = processPool
-        webConfiguration.preferences.javaScriptCanOpenWindowsAutomatically = true
-        self.webView = AWKWebView(frame: .zero, configuration: webConfiguration)
-        self.webView?.allowsBackForwardNavigationGestures = false
-        self.webView?.underPageBackgroundColor = .myPurple
-        self.webView?.uiDelegate = self
-        if let url = tab.url {
-            self.webView?.load(URLRequest(url: url))
-        }
-        
-        setupBindings()
-    }
-    
-    init(config: WKWebViewConfiguration, processPool: WKProcessPool, contentViewModel: ContentViewModel, appViewModel: AppViewModel) {
-        self.processPool = processPool
-        self.contentViewModel = contentViewModel
-        self.appViewModel = appViewModel
-        super.init()
-        self.webView = AWKWebView(frame: .zero, configuration: config)
-        self.webView?.allowsBackForwardNavigationGestures = false
-        self.webView?.underPageBackgroundColor = .myPurple
-        self.webView?.uiDelegate = self
-        
         setupBindings()
     }
     
@@ -129,7 +87,6 @@ class WebViewModel: NSObject, ObservableObject {
             webConfiguration.allowsAirPlayForMediaPlayback = true
             webConfiguration.mediaTypesRequiringUserActionForPlayback = []
             webConfiguration.suppressesIncrementalRendering = false
-            webConfiguration.processPool = processPool
             let webView = AWKWebView(frame: .zero, configuration: webConfiguration)
             self.webView = webView
             self.webView?.allowsBackForwardNavigationGestures = false
@@ -199,27 +156,23 @@ class WebViewModel: NSObject, ObservableObject {
     }
 }
 
-extension WebViewModel: WKUIDelegate {
+extension MiniWebViewModel: WKUIDelegate {
     func webView(_ webView: WKWebView, createWebViewWith configuration: WKWebViewConfiguration, for navigationAction: WKNavigationAction, windowFeatures: WKWindowFeatures) -> WKWebView? {
+        let url = navigationAction.request.url
         
         if let customAction = (webView as? AWKWebView)?.contextualMenuAction {
             switch customAction {
             case .openInNewTab:
-                let newWebViewModel = WebViewModel(config: configuration, processPool: self.processPool, contentViewModel: contentViewModel, appViewModel: appViewModel)
-                let newTab = ATab(webViewModel: newWebViewModel)
-                contentViewModel.tabs.append(newTab)
-                contentViewModel.currentTab = newTab.id
-                print("opened in new tab")
-                return newWebViewModel.webView
+                guard let openFromMiniTab = appViewModel.openMiniInNewTab else { return nil }
+                openFromMiniTab(url, "window1", true)
+                return nil
             case .openInBackground:
-                let newWebViewModel = WebViewModel(config: configuration, processPool: self.processPool, contentViewModel: contentViewModel, appViewModel: appViewModel)
-                let newTab = ATab(webViewModel: newWebViewModel)
-                contentViewModel.tabs.append(newTab)
-                print("openInBackground")
-                return newWebViewModel.webView
+                guard let openFromMiniTab = appViewModel.openMiniInNewTab else { return nil }
+                openFromMiniTab(url, "window1", false)
+                return nil
             }
         } else if navigationAction.targetFrame == nil {
-            guard let url = navigationAction.request.url, let open = appViewModel.openWindow else { return nil }
+            guard let url, let open = appViewModel.openWindow else { return nil }
             open(url)
             return nil
         } else {

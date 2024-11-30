@@ -12,7 +12,7 @@ extension URLDisplay: View {
         VStack {
             if !showTextField {
                 HStack {
-                    if let currentTab = appViewModel.tabs.first(where: {$0.id == appViewModel.currentTab}) {
+                    if let currentTab = contentViewModel.tabs.first(where: {$0.id == contentViewModel.currentTab}) {
                         Display(webViewModel: currentTab.webViewModel, url: $url)
                             .allowsHitTesting(false)
                     } else {
@@ -47,7 +47,7 @@ extension URLDisplay: View {
             return .handled
         }
         .onSubmit {
-            if let currentTab = appViewModel.tabs.first(where: {$0.id == appViewModel.currentTab}) {
+            if let currentTab = contentViewModel.tabs.first(where: {$0.id == contentViewModel.currentTab}) {
                 handleInputBarSubmit(text: text, tabID: currentTab.id)
                 showTextField = false
             } else {
@@ -55,7 +55,7 @@ extension URLDisplay: View {
                 showTextField = false
             }
         }
-        .onChange(of: appViewModel.currentTab) {
+        .onChange(of: contentViewModel.currentTab) {
             showTextField = false
         }
     }
@@ -74,11 +74,11 @@ extension URLDisplay: View {
                     Text("Loading...")
                 }
             }
-                .onChange(of: webViewModel.currentURL) {
-                    if let new = webViewModel.currentURL {
-                        url = new.absoluteString
-                    }
+            .onChange(of: webViewModel.currentURL) {
+                if let new = webViewModel.currentURL {
+                    url = new.absoluteString
                 }
+            }
         }
     }
 }

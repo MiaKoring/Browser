@@ -31,52 +31,64 @@ extension Sidebar: View {
                         }
                     }
                     .onTapGesture {
-                        appViewModel.isSidebarFixed.toggle()
-                        appViewModel.isSidebarShown = false
+                        contentViewModel.isSidebarFixed.toggle()
+                        contentViewModel.isSidebarShown = false
                     }
                 Spacer()
             }
-            .padding(.leading, appViewModel.isSidebarFixed ? 5: 0)
-            .padding(.top, appViewModel.isSidebarFixed ? 5: 0)
+            .padding(.leading, contentViewModel.isSidebarFixed ? 5: 0)
+            .padding(.top, contentViewModel.isSidebarFixed ? 5: 0)
             URLDisplay()
                 .padding(.top)
-            Divider()
+            HStack{
+                VStack {
+                    Divider()
+                }
+                Button {
+                    contentViewModel.tabs = []
+                } label: {
+                    Text("clear")
+                        .font(.footnote)
+                        .foregroundStyle(.gray)
+                }
+                .buttonStyle(.plain)
+            }
             HStack {
                 Image(systemName: "plus")
                 Text("New Tab")
                 Spacer()
             }
-                .allowsHitTesting(false)
-                .frame(maxWidth: .infinity)
-                .padding(10)
-                .background {
-                    HStack {
-                        if isNewTabHovered {
-                            RoundedRectangle(cornerRadius: 12)
-                                .fill(.white.opacity(0.1))
-                        } else {
-                            RoundedRectangle(cornerRadius: 12)
-                                .fill(.ultraThinMaterial)
-                                
-                        }
-                    }
-                    .onTapGesture {
-                        appViewModel.triggerNewTab.toggle()
-                    }
-                    .onHover { hovering in
-                        isNewTabHovered = hovering
+            .allowsHitTesting(false)
+            .frame(maxWidth: .infinity)
+            .padding(10)
+            .background {
+                HStack {
+                    if isNewTabHovered {
+                        RoundedRectangle(cornerRadius: 12)
+                            .fill(.white.opacity(0.1))
+                    } else {
+                        RoundedRectangle(cornerRadius: 12)
+                            .fill(.ultraThinMaterial)
+                        
                     }
                 }
-        
+                .onTapGesture {
+                    contentViewModel.triggerNewTab.toggle()
+                }
+                .onHover { hovering in
+                    isNewTabHovered = hovering
+                }
+            }
+            
             ATabView()
                 .padding(-15)
         }
         .frame(maxHeight: .infinity)
-        .frame(maxWidth: appViewModel.isSidebarFixed ? .infinity: 300)
+        .frame(maxWidth: contentViewModel.isSidebarFixed ? .infinity: 300)
         .padding(5)
         .background {
             HStack {
-                if appViewModel.isSidebarFixed {
+                if contentViewModel.isSidebarFixed {
                     RoundedRectangle(cornerRadius: 5)
                         .fill(.ultraThinMaterial)
                 } else {
@@ -84,35 +96,36 @@ extension Sidebar: View {
                         .fill(.myPurple.mix(with: .white, by: 0.1))
                 }
             }
-                .overlay {
-                    RoundedRectangle(cornerRadius: 5)
-                        .stroke(lineWidth: 1)
-                        .fill(.ultraThickMaterial)
-                        .shadow(radius: 5)
-                }
+            .overlay {
+                RoundedRectangle(cornerRadius: 5)
+                    .stroke(lineWidth: 1)
+                    .fill(.ultraThickMaterial)
+                    .shadow(radius: 5)
+            }
         }
-        .padding(appViewModel.isSidebarFixed ? 0: 8)
+        .padding(contentViewModel.isSidebarFixed ? 0: 8)
     }
 }
 
 #Preview {
+    @Previewable @State var contentViewModel = ContentViewModel(id: "lol")
     @Previewable @State var appViewModel = AppViewModel()
     BackgroundView {
         ZStack {
             ContentView()
             HStack {
                 Sidebar()
-                
                 Spacer()
             }
         }
     }
+    .environment(contentViewModel)
     .environment(appViewModel)
     .onAppear() {
-        let vm = WebViewModel(processPool: appViewModel.wkProcessPool, appViewModel: appViewModel)
+        let vm = WebViewModel(processPool: contentViewModel.wkProcessPool, contentViewModel: contentViewModel, appViewModel: appViewModel)
         vm.load(urlString: "https://miakoring.de")
         let tab = ATab(webViewModel: vm)
-        appViewModel.tabs.append(tab)
-        appViewModel.currentTab = tab.id
+        contentViewModel.tabs.append(tab)
+        contentViewModel.currentTab = tab.id
     }
 }

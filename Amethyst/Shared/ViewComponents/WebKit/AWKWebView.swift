@@ -81,10 +81,9 @@ class AWKWebView: WKWebView {
             } else if menuItem.identifier?.rawValue == ContextualMenuAction.openInBackground.rawValue {
                 self.contextualMenuAction = .openInBackground
             }
-            print(self.contextualMenuAction)
             
             if let action = originalMenu.action {
-                originalMenu.target?.perform(action, with: originalMenu)
+                _ = originalMenu.target?.perform(action, with: originalMenu)
             }
         }
     }
