@@ -170,10 +170,14 @@ extension MiniWebViewModel: WKUIDelegate {
                 guard let openFromMiniTab = appViewModel.openMiniInNewTab else { return nil }
                 openFromMiniTab(url, "window1", false)
                 return nil
+            case .openInNewWindow:
+                guard let url, let open = appViewModel.openWindow else { return nil }
+                open(url)
+                return nil
             }
         } else if navigationAction.targetFrame == nil {
-            guard let url, let open = appViewModel.openWindow else { return nil }
-            open(url)
+            guard let openFromMiniTab = appViewModel.openMiniInNewTab else { return nil }
+            openFromMiniTab(url, "window1", true)
             return nil
         } else {
             return nil

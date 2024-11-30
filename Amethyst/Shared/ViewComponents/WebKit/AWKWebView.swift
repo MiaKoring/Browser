@@ -14,8 +14,9 @@ class AWKWebView: WKWebView {
         super.willOpenMenu(menu, with: event)
         
         var items = menu.items
-        // For all default menu items which open a new Window, we add custom menu items
-        // to open the object in a new Tab and to add them to the bookmarks.
+        
+        
+        
         for idx in (0..<items.count).reversed() {
             if let id = items[idx].identifier?.rawValue {
                 if id == "WKMenuItemIdentifierOpenLinkInNewWindow" ||
@@ -49,6 +50,13 @@ class AWKWebView: WKWebView {
                     tabMenuItem.target = self
                     tabMenuItem.representedObject = items[idx]
                     items.insert(tabMenuItem, at: idx)
+                    
+                    let newWindowTitle = "Open \(object) in new Window"
+                    let newWindowItem = NSMenuItem(title:newWindowTitle, action:action, keyEquivalent:"")
+                    newWindowItem.identifier = NSUserInterfaceItemIdentifier("openInNewWindow")
+                    newWindowItem.target = self
+                    newWindowItem.representedObject = items[idx]
+                    items.insert(newWindowItem, at: idx + 2)
                 
                     /*
                     let title2 = "Add \(object) to Bookmarks"
@@ -61,27 +69,37 @@ class AWKWebView: WKWebView {
             }
         }
         
+        for idx in (0..<items.count).reversed() {
+          if let id = items[idx].identifier?.rawValue {
+            if id == "WKMenuItemIdentifierOpenLinkInNewWindow"  {
+              items.remove(at:idx)
+            }
+          }
+        }
+        
         menu.items = items
     }
     
     override func didCloseMenu(_ menu: NSMenu, with event: NSEvent?) {
         super.didCloseMenu(menu, with: event)
-        
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.7) {
             self.contextualMenuAction = nil
         }
     }
     
     @objc func processMenuItem(_ menuItem: NSMenuItem) {
-        self.contextualMenuAction = nil
-        
         if let originalMenu = menuItem.representedObject as? NSMenuItem {
-            if menuItem.identifier?.rawValue == ContextualMenuAction.openInNewTab.rawValue {
-                self.contextualMenuAction = .openInNewTab
-            } else if menuItem.identifier?.rawValue == ContextualMenuAction.openInBackground.rawValue {
-                self.contextualMenuAction = .openInBackground
+            if self.contextualMenuAction != .openInNewWindow { // for some reason this function seems to get called twice when openInNewWindow and in the second turn it gets set to openInNewTab, this if check fixes it
+                self.contextualMenuAction = nil
+                if menuItem.identifier?.rawValue == ContextualMenuAction.openInNewTab.rawValue {
+                    self.contextualMenuAction = .openInNewTab
+                } else if menuItem.identifier?.rawValue == ContextualMenuAction.openInBackground.rawValue {
+                    self.contextualMenuAction = .openInBackground
+                } else if menuItem.identifier?.rawValue == ContextualMenuAction.openInNewWindow.rawValue {
+                    self.contextualMenuAction = .openInNewWindow
+                }
             }
-            
+            print("Called: \(self.contextualMenuAction)")
             if let action = originalMenu.action {
                 _ = originalMenu.target?.perform(action, with: originalMenu)
             }

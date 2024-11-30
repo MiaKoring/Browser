@@ -8,4 +8,5 @@
 enum ContextualMenuAction: String {
     case openInNewTab = "openInNewTab"
     case openInBackground = "openInBackground"
+    case openInNewWindow = "openInNewWindow"
 }
