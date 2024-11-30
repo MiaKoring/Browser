@@ -26,6 +26,7 @@ struct ContentView {
     @Environment(AppViewModel.self) var appViewModel: AppViewModel
     @Environment(ContentViewModel.self) var contentViewModel: ContentViewModel
     @Environment(\.modelContext) var context: ModelContext
+    @Environment(\.dismissWindow) var dismissWindow
     @State var showInputBar: Bool = false
     @State var inputBarText: String = ""
     @State var sidebarWidth: CGFloat = 308

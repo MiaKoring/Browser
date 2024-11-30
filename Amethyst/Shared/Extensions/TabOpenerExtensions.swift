@@ -13,9 +13,7 @@ extension TabOpener {
         do {
             if text == ":q" {
                 try context.delete(model: SavedTab.self)
-                if let window = NSApplication.shared.windows.first {
-                    window.performClose(nil)
-                }
+                dismissWindow()
                 return
             } else if text == ":clear" {
                 contentViewModel.tabs = []

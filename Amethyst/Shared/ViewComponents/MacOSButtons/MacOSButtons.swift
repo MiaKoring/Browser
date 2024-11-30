@@ -19,7 +19,7 @@ struct MacOSButtons: View {
                     .foregroundColor(.red)
                     .onTapGesture {
                         self.appViewModel.displayedWindows.remove(window.identifier?.rawValue ?? "")
-                        window.performClose(nil)
+                        dismissWindow()
                     }
                 
                 if !window.isZoomed {
