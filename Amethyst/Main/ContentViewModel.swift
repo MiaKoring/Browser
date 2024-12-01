@@ -18,6 +18,7 @@ class ContentViewModel: NSObject, ObservableObject {
     var tabs: [ATab] = []
     var wkProcessPool = WKProcessPool()
     var blockNotification: Bool = false
+    var triggerRestoredHistory: Bool = false
     
     init(id: String) {
         self.id = id
@@ -37,6 +38,10 @@ class ContentViewModel: NSObject, ObservableObject {
             tabs.remove(at: index)
         }
     }
+    
+    func tabFor(id: UUID?) -> ATab? {
+        return tabs.first(where: {$0.id == id})
+    }
 }
 struct ContentView {
     @Environment(AppViewModel.self) var appViewModel: AppViewModel
@@ -49,6 +54,41 @@ struct ContentView {
     @State var showMacosWindowIconsAreaHovered: Bool = false
     @State var macosWindowIconsHovered: Bool = false
     @State var window: NSWindow? = nil
+    @State var showRestoredHistory: Bool = false
     @Environment(\.scenePhase) var scenePhase
+    
+    
+    func onAppear() {
+        NotificationCenter.default.addObserver(
+            forName: NSWindow.didBecomeMainNotification,
+            object: nil,
+            queue: .main
+        ) { notification in
+            if contentViewModel.blockNotification { // to block reinserting the window on close
+                contentViewModel.blockNotification = false
+                return
+            }
+            if let name = window?.identifier?.rawValue {
+                appViewModel.displayedWindows.insert(name)
+            }
+        }
+        if contentViewModel.tabs.isEmpty {
+            contentViewModel.isSidebarShown = true
+        }
+        let id = contentViewModel.id
+        let fetchDescriptor = FetchDescriptor(predicate: #Predicate<SavedTab>{ return $0.windowID == id}, sortBy: [SortDescriptor(\SavedTab.sortingID, order: .forward)])
+        do {
+            let savedTabs = try context.fetch(fetchDescriptor)
+            for savedTab in savedTabs {
+                let vm = WebViewModel(contentViewModel: contentViewModel, appViewModel: appViewModel)
+                vm.load(urlString: savedTab.url?.absoluteString ?? "https://miakoring.de")
+                let newTab = ATab(id: savedTab.id, webViewModel: vm, restoredURLs: savedTab.backForwardList)
+                print(savedTab.backForwardList)
+                contentViewModel.tabs.append(newTab)
+            }
+        } catch {
+            print("failed to fetch saved tabs")
+        }
+    }
 }
 

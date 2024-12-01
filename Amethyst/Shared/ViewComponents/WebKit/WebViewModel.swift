@@ -23,6 +23,29 @@ class WebViewModel: NSObject, ObservableObject {
     private var cancellables: Set<AnyCancellable> = []
     private var processPool: WKProcessPool
     
+    init(contentViewModel: ContentViewModel, appViewModel: AppViewModel) {
+        self.processPool = contentViewModel.wkProcessPool
+        self.contentViewModel = contentViewModel
+        self.appViewModel = appViewModel
+        super.init()
+        
+        let webConfiguration = WKWebViewConfiguration()
+        webConfiguration.applicationNameForUserAgent = "Mozilla/5.0 (Macintosh; Apple Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Version/13.1 Safari/537.36"
+        webConfiguration.defaultWebpagePreferences.allowsContentJavaScript = true
+        webConfiguration.allowsInlinePredictions = true
+        webConfiguration.allowsAirPlayForMediaPlayback = true
+        webConfiguration.mediaTypesRequiringUserActionForPlayback = []
+        webConfiguration.suppressesIncrementalRendering = false
+        webConfiguration.processPool = processPool
+        webConfiguration.preferences.javaScriptCanOpenWindowsAutomatically = true
+        self.webView = AWKWebView(frame: .zero, configuration: webConfiguration)
+        self.webView?.allowsBackForwardNavigationGestures = false
+        self.webView?.underPageBackgroundColor = .myPurple
+        self.webView?.uiDelegate = self
+        self.webView?.navigationDelegate = self
+        setupBindings()
+    }
+    
     init(processPool: WKProcessPool, contentViewModel: ContentViewModel, appViewModel: AppViewModel) {
         self.processPool = processPool
         self.contentViewModel = contentViewModel
@@ -42,6 +65,7 @@ class WebViewModel: NSObject, ObservableObject {
         self.webView?.allowsBackForwardNavigationGestures = false
         self.webView?.underPageBackgroundColor = .myPurple
         self.webView?.uiDelegate = self
+        self.webView?.navigationDelegate = self
         setupBindings()
     }
     
@@ -63,6 +87,7 @@ class WebViewModel: NSObject, ObservableObject {
         self.webView?.allowsBackForwardNavigationGestures = false
         self.webView?.underPageBackgroundColor = .myPurple
         self.webView?.uiDelegate = self
+        self.webView?.navigationDelegate = self
         if let url = tab.url {
             self.webView?.load(URLRequest(url: url))
         }
@@ -79,6 +104,7 @@ class WebViewModel: NSObject, ObservableObject {
         self.webView?.allowsBackForwardNavigationGestures = false
         self.webView?.underPageBackgroundColor = .myPurple
         self.webView?.uiDelegate = self
+        self.webView?.navigationDelegate = self
         
         setupBindings()
     }
@@ -209,7 +235,7 @@ extension WebViewModel: WKUIDelegate {
                 return openInNewTab(configuration: configuration)
             case .openInBackground:
                 let newWebViewModel = WebViewModel(config: configuration, processPool: self.processPool, contentViewModel: contentViewModel, appViewModel: appViewModel)
-                let newTab = ATab(webViewModel: newWebViewModel)
+                let newTab = ATab(webViewModel: newWebViewModel, restoredURLs: [])
                 contentViewModel.tabs.append(newTab)
                 print("openInBackground")
                 return newWebViewModel.webView
@@ -231,7 +257,7 @@ extension WebViewModel: WKUIDelegate {
     
     func openInNewTab(configuration: WKWebViewConfiguration) -> WKWebView? {
         let newWebViewModel = WebViewModel(config: configuration, processPool: self.processPool, contentViewModel: contentViewModel, appViewModel: appViewModel)
-        let newTab = ATab(webViewModel: newWebViewModel)
+        let newTab = ATab(webViewModel: newWebViewModel, restoredURLs: [])
         if let index = contentViewModel.tabs.firstIndex(where: {$0.id == contentViewModel.currentTab}) {
             contentViewModel.tabs.insert(newTab, at: index + 1)
         } else {
@@ -239,5 +265,30 @@ extension WebViewModel: WKUIDelegate {
         }
         contentViewModel.currentTab = newTab.id
         return newWebViewModel.webView
+    }
+}
+
+extension WebViewModel: WKNavigationDelegate {
+    func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction) async -> WKNavigationActionPolicy {
+        //TODO: verlauf
+        /*if let url = navigationAction.request.url {
+            switch navigationAction.navigationType {
+            case .reload:
+                break
+            case .linkActivated:
+                
+            case .formSubmitted:
+                <#code#>
+            case .backForward:
+                <#code#>
+            case .formResubmitted:
+                <#code#>
+            case .other:
+                <#code#>
+            @unknown default:
+                break
+            }
+        }*/
+        return .allow
     }
 }

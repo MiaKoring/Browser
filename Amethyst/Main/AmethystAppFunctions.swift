@@ -95,6 +95,19 @@ extension AmethystApp {
         return notEnoughTabs || !indexOk
     }
     
+    func openTabHistory() {
+        let currentWindow = appViewModel.currentlyActiveWindowId
+        guard let contentViewModel = contentViewModel(for: currentWindow) else { return }
+        contentViewModel.triggerRestoredHistory.toggle()
+        print("shouldOpen")
+    }
+    
+    func isTabHistoryDisabled()-> Bool {
+        let currentWindow = appViewModel.currentlyActiveWindowId
+        guard let contentViewModel = contentViewModel(for: currentWindow), let tab = contentViewModel.tabs.first(where: {$0.id == contentViewModel.currentTab}), !tab.restoredURLs.isEmpty else { return true }
+        return false
+    }
+    
     func onAppear() {
         appDelegate.configure(appViewModel: appViewModel, contentViewModel: contentViewModel, contentViewModel2: contentViewModel2, contentViewModel3: contentViewModel3, container: container)
         appViewModel.openWindow = { url in
@@ -104,7 +117,7 @@ extension AmethystApp {
         appViewModel.openMiniInNewTab = { url, id, newTab in
             let vm = WebViewModel(processPool: contentViewModel.wkProcessPool, contentViewModel: contentViewModel, appViewModel: appViewModel)
             vm.load(urlString: url?.absoluteString ?? "")
-            let tab = ATab(webViewModel: vm)
+            let tab = ATab(webViewModel: vm, restoredURLs: [])
             switch id {
             case "window1":
                 contentViewModel.tabs.append(tab)

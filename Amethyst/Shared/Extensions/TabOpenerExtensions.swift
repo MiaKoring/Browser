@@ -35,7 +35,7 @@ extension TabOpener {
                     }
                     contentViewModel.tabs[index].webViewModel.load(urlString: url?.absoluteString ?? "")
                 } else {
-                    let tab = ATab(webViewModel: vm)
+                    let tab = ATab(webViewModel: vm, restoredURLs: [])
                     contentViewModel.tabs.append(tab)
                     contentViewModel.currentTab = tab.id
                 }
@@ -49,7 +49,7 @@ extension TabOpener {
                 }
                 contentViewModel.tabs[index].webViewModel.load(urlString: text)
             } else {
-                let tab = ATab(webViewModel: vm)
+                let tab = ATab(webViewModel: vm, restoredURLs: [])
                 contentViewModel.tabs.append(tab)
                 contentViewModel.currentTab = tab.id
             }
@@ -63,7 +63,7 @@ extension TabOpener {
             }
             contentViewModel.tabs[index].webViewModel.load(urlString: text)
         } else {
-            let tab = ATab(webViewModel: vm)
+            let tab = ATab(webViewModel: vm, restoredURLs: [])
             contentViewModel.tabs.append(tab)
             contentViewModel.currentTab = tab.id
         }

@@ -25,7 +25,7 @@ struct AmethystApp: App {
     
     init() {
         do {
-            container = try ModelContainer(for: SavedTab.self, migrationPlan: TabMigration.self)
+            container = try ModelContainer(for: SavedTab.self, BackForwardListItem.self, migrationPlan: TabMigration.self)
         } catch {
             fatalError("failed to initialize model container")
         }
@@ -95,6 +95,11 @@ struct AmethystApp: App {
                 }
                 .keyboardShortcut("c", modifiers: .option)
                 .disabled(contentViewModel(for: appViewModel.currentlyActiveWindowId)?.currentTab == nil)
+                Button("Show Restored Tabhistory") {
+                    openTabHistory()
+                }
+                .keyboardShortcut("t", modifiers: [.shift, .command])
+                .disabled(isTabHistoryDisabled())
             }
         }
     }

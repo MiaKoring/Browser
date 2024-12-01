@@ -124,7 +124,7 @@ extension Sidebar: View {
     .onAppear() {
         let vm = WebViewModel(processPool: contentViewModel.wkProcessPool, contentViewModel: contentViewModel, appViewModel: appViewModel)
         vm.load(urlString: "https://miakoring.de")
-        let tab = ATab(webViewModel: vm)
+        let tab = ATab(webViewModel: vm, restoredURLs: [])
         contentViewModel.tabs.append(tab)
         contentViewModel.currentTab = tab.id
     }

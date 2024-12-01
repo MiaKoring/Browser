@@ -50,30 +50,7 @@ extension ContentView: View, TabOpener {
                                 Sidebar()
                                     .frame(maxWidth: sidebarWidth)
                                     .overlay(alignment: .trailing) {
-                                        Rectangle()
-                                            .fill(.clear)
-                                            .frame(width: 10)
-                                            .frame(maxHeight: .infinity)
-                                            .contentShape(Rectangle())
-                                            .gesture(
-                                                DragGesture(minimumDistance: 10)
-                                                    .onChanged { value in
-                                                        NSCursor.frameResize(position: .right, directions: .all).set()
-                                                        let changed = value.startLocation.x - value.location.x
-                                                        sidebarWidth = max(200, min(sidebarWidth - changed, 400))
-                                                    }
-                                                    .onEnded { _ in
-                                                        NSCursor.arrow.set()
-                                                    }
-                                            )
-                                            .onHover { hovering in
-                                                if hovering {
-                                                    NSCursor.frameResize(position: .right, directions: .all).set()
-                                                } else {
-                                                    NSCursor.arrow.set()
-                                                }
-                                            }
-                                            .offset(x: 10)
+                                        SidebarResizer(sidebarWidth: $sidebarWidth)
                                     }
                                 if contentViewModel.tabs.isEmpty {
                                     Spacer()
@@ -119,13 +96,15 @@ extension ContentView: View, TabOpener {
                 }
             }
             .overlay {
-                if showInputBar {
-                    InputBar(text: $inputBarText, showInputBar: $showInputBar) {
-                        handleInputBarSubmit(text: inputBarText)
-                        inputBarText = ""
-                        showInputBar = false
+                ZStack {
+                    if showInputBar {
+                        InputBar(text: $inputBarText, showInputBar: $showInputBar) {
+                            handleInputBarSubmit(text: inputBarText)
+                            inputBarText = ""
+                            showInputBar = false
+                        }
+                        .frame(maxWidth: max(550, min(reader.size.width / 2, 800)))
                     }
-                    .frame(maxWidth: max(550, min(reader.size.width / 2, 800)))
                 }
             }
             .onChange(of: contentViewModel.triggerNewTab) {
@@ -136,34 +115,12 @@ extension ContentView: View, TabOpener {
                     contentViewModel.isSidebarShown = true
                 }
             }
+            .onChange(of: contentViewModel.triggerRestoredHistory) {
+                showRestoredHistory.toggle()
+                print("triggered")
+            }
             .onAppear() {
-                NotificationCenter.default.addObserver(
-                    forName: NSWindow.didBecomeMainNotification,
-                    object: nil,
-                    queue: .main
-                ) { notification in
-                    if contentViewModel.blockNotification { // to block reinserting the window on close
-                        contentViewModel.blockNotification = false
-                        return
-                    }
-                    if let name = window?.identifier?.rawValue {
-                        appViewModel.displayedWindows.insert(name)
-                    }
-                }
-                if contentViewModel.tabs.isEmpty {
-                    contentViewModel.isSidebarShown = true
-                }
-                let id = contentViewModel.id
-                let fetchDescriptor = FetchDescriptor(predicate: #Predicate<SavedTab>{ return $0.windowID == id}, sortBy: [SortDescriptor(\SavedTab.sortingID, order: .forward)])
-                do {
-                    let savedTabs = try context.fetch(fetchDescriptor)
-                    for savedTab in savedTabs {
-                        let vm = WebViewModel(processPool: contentViewModel.wkProcessPool, restore: savedTab, contentViewModel: contentViewModel, appViewModel: appViewModel)
-                        contentViewModel.tabs.append(ATab(id: savedTab.id, webViewModel: vm))
-                    }
-                } catch {
-                    print("failed to fetch saved tabs")
-                }
+                onAppear()
             }
         }
         .onDisappear {
@@ -175,6 +132,11 @@ extension ContentView: View, TabOpener {
         }
         .environment(contentViewModel)
         .clipShape(RoundedRectangle(cornerRadius: 10))
+        .sheet(isPresented: $showRestoredHistory) {
+            RestoredHistory()
+                .environment(contentViewModel)
+                .frame(width: 350, height: 400)
+        }
     }
     
 }

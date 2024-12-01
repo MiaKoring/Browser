@@ -10,12 +10,14 @@ import SwiftUI
 struct BackgroundView<C: View>: View {
     let content: C
     let background: AngularGradient
+    let shouldRotate: Bool
     @State var rotation: Double = 0
     @Environment(\.accessibilityReduceMotion) var reduceMotion
 
-    init(_ background: AngularGradient? = nil, @ViewBuilder content: () -> C) {
+    init(_ background: AngularGradient? = nil, shouldRotate: Bool = true, @ViewBuilder content: () -> C) {
         self.content = content()
         self.background = background ?? AngularGradient(stops:[.init(color: .myPurple, location: 0), .init(color: .myPurple.mix(with: .white, by: 0.07), location: 0.5), .init(color: .myPurple, location: 1)], center: .center)
+        self.shouldRotate = shouldRotate
     }
 
     var body: some View {
@@ -24,7 +26,7 @@ struct BackgroundView<C: View>: View {
                 background
                     .rotationEffect(.degrees(rotation))
                     .onAppear() {
-                        if !UDKey.dontAnimateBackground.boolValue && !reduceMotion {
+                        if !UDKey.dontAnimateBackground.boolValue && !reduceMotion && shouldRotate {
                             withAnimation(.linear(duration: 30).repeatForever(autoreverses: false)) {
                                 rotation = 360
                             }

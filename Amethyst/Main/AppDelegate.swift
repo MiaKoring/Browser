@@ -6,6 +6,7 @@
 //
 import SwiftData
 import SwiftUI
+import WebKit
 
 class AppDelegate: NSObject, NSApplicationDelegate {
     var appViewModel: AppViewModel?
@@ -23,7 +24,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
     
     func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
-        print("willTerminate")
         guard let container else { return .terminateNow }
         let context = ModelContext(container)
         do {
@@ -89,9 +89,27 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private func insertTo(context: ModelContext, valuesOf values: ContentViewModel, id: String) {
         for i in 0..<values.tabs.count {
             let tab = values.tabs[i]
-            let newTab = SavedTab(id: tab.id, sortingID: i, url: tab.webViewModel.currentURL, windowID: id)
+            
+            let backList = Array(tab.webViewModel.getWebView().backForwardList.backList.suffix(20))
+            let forwardList = Array(tab.webViewModel.getWebView().backForwardList.forwardList.prefix(20))
+            let transformedBackList: [BackForwardListItem] = transformBackForwardList(list: backList)
+            let transformedForwardList: [BackForwardListItem] = transformBackForwardList(list: forwardList, startingAt: backList.count + 1)
+            
+            var combined = transformedBackList
+            combined.append(BackForwardListItem(sortingID: transformedBackList.count, url: tab.webViewModel.currentURL, title: tab.webViewModel.title))
+            combined.append(contentsOf: transformedForwardList)
+            
+            let newTab = SavedTab(id: tab.id, sortingID: i, url: tab.webViewModel.currentURL, windowID: id, backForwardList: combined)
             context.insert(newTab)
         }
+    }
+    
+    private func transformBackForwardList(list: [WKBackForwardListItem], startingAt: Int = 0) -> [BackForwardListItem] {
+        var items = [BackForwardListItem]()
+        for i in 0..<list.count {
+            items.append(BackForwardListItem(sortingID: startingAt + i, url: list[i].url, title: list[i].title))
+        }
+        return items
     }
 }
 
