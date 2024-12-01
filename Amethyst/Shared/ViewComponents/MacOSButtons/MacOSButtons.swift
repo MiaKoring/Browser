@@ -18,6 +18,7 @@ struct MacOSButtons: View {
                     .font(.system(size: 12))
                     .foregroundColor(.red)
                     .onTapGesture {
+                        contentViewModel.blockNotification = true //to block notification didBecomeMain in ContentView
                         self.appViewModel.displayedWindows.remove(window.identifier?.rawValue ?? "")
                         dismissWindow()
                     }

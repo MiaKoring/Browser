@@ -77,18 +77,7 @@ extension AmethystApp {
         guard let contentViewModel = contentViewModel(for: appViewModel.currentlyActiveWindowId) else {
             return
         }
-        guard let index = contentViewModel.tabs.firstIndex(where: {$0.id == contentViewModel.currentTab}) else { return }
-        if contentViewModel.tabs.count > 1 {
-            let before = contentViewModel.tabs[max(0, index - 1)].id
-            let after = contentViewModel.tabs[min(contentViewModel.tabs.count - 1, index + 1)].id
-            contentViewModel.currentTab = before == contentViewModel.currentTab ? after : before
-        } else {
-            contentViewModel.currentTab = nil
-        }
-        withAnimation(.linear(duration: 0.2)) {
-            contentViewModel.tabs[index].webViewModel.deinitialize()
-            contentViewModel.tabs.remove(at: index)
-        }
+        contentViewModel.handleClose()
     }
     
     func tabSwitchingDisabled(back: Bool = true) -> Bool {

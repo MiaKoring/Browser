@@ -225,12 +225,19 @@ extension WebViewModel: WKUIDelegate {
         }
     }
     
+    func webViewDidClose(_ webView: WKWebView) {
+        contentViewModel.handleClose()
+    }
+    
     func openInNewTab(configuration: WKWebViewConfiguration) -> WKWebView? {
         let newWebViewModel = WebViewModel(config: configuration, processPool: self.processPool, contentViewModel: contentViewModel, appViewModel: appViewModel)
         let newTab = ATab(webViewModel: newWebViewModel)
-        contentViewModel.tabs.append(newTab)
+        if let index = contentViewModel.tabs.firstIndex(where: {$0.id == contentViewModel.currentTab}) {
+            contentViewModel.tabs.insert(newTab, at: index + 1)
+        } else {
+            contentViewModel.tabs.append(newTab)
+        }
         contentViewModel.currentTab = newTab.id
-        print("opened in new tab")
         return newWebViewModel.webView
     }
 }

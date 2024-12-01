@@ -99,7 +99,6 @@ class AWKWebView: WKWebView {
                     self.contextualMenuAction = .openInNewWindow
                 }
             }
-            print("Called: \(self.contextualMenuAction)")
             if let action = originalMenu.action {
                 _ = originalMenu.target?.perform(action, with: originalMenu)
             }

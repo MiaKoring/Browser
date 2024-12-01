@@ -16,15 +16,15 @@ extension ContentView: View, TabOpener {
         GeometryReader { reader in
             BackgroundView {
                 ZStack {
-                    HostingWindowFinder { window in
+                    HostingWindowFinder(callback: { window in
                         if let window {
                             if let id = window.identifier {
                                 self.appViewModel.currentlyActiveWindowId = id.rawValue
                                 self.appViewModel.displayedWindows.insert(id.rawValue)
-                                print(id.rawValue)
+                                self.window = window
                             }
                         }
-                    }
+                    })
                     if appViewModel.highlightedWindow == contentViewModel.id {
                         RoundedRectangle(cornerRadius: 10)
                             .stroke(lineWidth: 5)
@@ -137,11 +137,23 @@ extension ContentView: View, TabOpener {
                 }
             }
             .onAppear() {
+                NotificationCenter.default.addObserver(
+                    forName: NSWindow.didBecomeMainNotification,
+                    object: nil,
+                    queue: .main
+                ) { notification in
+                    if contentViewModel.blockNotification { // to block reinserting the window on close
+                        contentViewModel.blockNotification = false
+                        return
+                    }
+                    if let name = window?.identifier?.rawValue {
+                        appViewModel.displayedWindows.insert(name)
+                    }
+                }
                 if contentViewModel.tabs.isEmpty {
                     contentViewModel.isSidebarShown = true
                 }
                 let id = contentViewModel.id
-                print(id)
                 let fetchDescriptor = FetchDescriptor(predicate: #Predicate<SavedTab>{ return $0.windowID == id}, sortBy: [SortDescriptor(\SavedTab.sortingID, order: .forward)])
                 do {
                     let savedTabs = try context.fetch(fetchDescriptor)
@@ -153,6 +165,13 @@ extension ContentView: View, TabOpener {
                     print("failed to fetch saved tabs")
                 }
             }
+        }
+        .onDisappear {
+            NotificationCenter.default.removeObserver(
+                self,
+                name: NSWindow.didBecomeMainNotification,
+                object: nil
+            )
         }
         .environment(contentViewModel)
         .clipShape(RoundedRectangle(cornerRadius: 10))
