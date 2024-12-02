@@ -98,8 +98,8 @@ extension ContentView: View, TabOpener {
             .overlay {
                 ZStack {
                     if showInputBar {
-                        InputBar(text: $inputBarText, showInputBar: $showInputBar) {
-                            handleInputBarSubmit(text: inputBarText)
+                        InputBar(text: $inputBarText, showInputBar: $showInputBar) { text in
+                            handleInputBarSubmit(text: text)
                             inputBarText = ""
                             showInputBar = false
                         }

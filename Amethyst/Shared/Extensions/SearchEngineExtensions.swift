@@ -14,6 +14,13 @@ extension SearchEngine {
         }
     }
     
+    func quickResults(_ input: String) async -> [String] {
+        switch self {
+        case .duckduckgo:
+            await SEDuckDuckGo.quickResults(query: input)
+        }
+    }
+    
     var root: String {
         switch self {
         case .duckduckgo:
