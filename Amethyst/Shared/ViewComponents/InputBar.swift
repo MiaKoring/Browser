@@ -64,6 +64,10 @@ struct InputBar: View {
                                     .foregroundStyle(.myPurple.mix(with: .white, by: 0.15).opacity(0.6))
                             }
                         }
+                        .contentShape(Rectangle())
+                        .onTapGesture {
+                            onSubmit(result.urlString)
+                        }
                     }
                 }
                 .overlay(alignment: .bottomTrailing) {
