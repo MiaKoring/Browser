@@ -14,7 +14,6 @@ struct SingleFrame {
     @State var webViewModel: MiniWebViewModel
     @Binding var url: URL?
     @State var showWindowSelection: Bool = false
-    @State var selectedWindowOption: String = ""
     
     init(appViewModel: AppViewModel, url: Binding<URL?>) {
         let webViewModel = MiniWebViewModel(appViewModel: appViewModel)
@@ -31,27 +30,21 @@ struct SingleFrame {
         return options
     }
     
-    func highlightSelection(left: Bool = true) {
-        let options = windowSelectOptions()
-        let currentIndex = options.firstIndex(of: selectedWindowOption) ?? 0
-        if left {
-            let index = currentIndex - 1 >= 0 ? currentIndex - 1: options.count - 1
-            selectedWindowOption = options[index]
-        } else {
-            let index = currentIndex + 1 < options.count ? currentIndex + 1: 0
-            selectedWindowOption = options[index]
-        }
-    }
-    
     func handleWindowOpening(selected: String) {
         guard let open = appViewModel.openMiniInNewTab else { return }
         if selected == "newWindow" {
             let window = ["window1", "window2", "window3"].first(where: {!appViewModel.displayedWindows.contains($0)}) ?? "window1"
             open(webViewModel.currentURL, window, true)
-            dismissWindow()
+            showWindowSelection = false
+            DispatchQueue.main.asyncAfter(deadline: .now()+0.2) {
+                dismissWindow()
+            }
         } else {
             open(webViewModel.currentURL, selected, true)
-            dismissWindow()
+            showWindowSelection = false
+            DispatchQueue.main.asyncAfter(deadline: .now()+0.2) {
+                dismissWindow()
+            }
         }
     }
 }

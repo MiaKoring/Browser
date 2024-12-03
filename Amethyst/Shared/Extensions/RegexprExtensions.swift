@@ -7,12 +7,17 @@
 
 import Foundation
 extension Regexpr {
-    var regex: Regex<(Substring, Optional<Substring>, Substring)>? {
-        switch self {
+    var regex: Regex<Substring> {
+        return switch self {
         case .url:
-            try? Regex("https?:\\/\\/(www\\.)?[-a-zA-Z0-9@:%._\\+~#=]{2,256}\\.[a-z]{2,}\\b([-a-zA-Z0-9@:%_\\+.~#?&\\/\\/=]*)")
+            /https?:\/\/(?:www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,}\b(?:[-a-zA-Z0-9@:%_\+.~#?&\/\/=]*)/
         case .urlWithoutProtocol:
-            try? Regex("(www\\.)?[-a-zA-Z0-9@:%._\\+~#=]{2,256}\\.[a-z]{2,}\\b([-a-zA-Z0-9@:%_\\+.~#?&\\/\\/=]*)")
+            /(?:www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,}\b(?:[-a-zA-Z0-9@:%_\+.~#?&\/\/=]*)/
+        case .ip:
+            /^https?:\/\/(?:[0-9]{1,3}\.){3}[0-9]{1,3}(?::[0-9]+)?(?:\/\S\*)?$/
+        case .ipWithoutProtocol:
+            /^(?:[0-9]{1,3}\.){3}[0-9]{1,3}(?::[0-9]+)?(?:\/\S*)?$/
         }
     }
 }
+

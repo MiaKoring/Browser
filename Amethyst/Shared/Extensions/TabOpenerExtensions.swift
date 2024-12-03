@@ -23,45 +23,45 @@ extension TabOpener {
         } catch {
             print("deletings models failed")
         }
-        guard let regex = Regexpr.url.regex, let _ = text.wholeMatch(of: regex) else {
-            guard let regex = Regexpr.urlWithoutProtocol.regex, let _ = text.wholeMatch(of: regex) else {
-                let searchEngine = SearchEngine(rawValue: UDKey.searchEngine.intValue) ?? .duckduckgo
-                let url = searchEngine.makeSearchUrl(text)
-                let vm = WebViewModel(processPool: contentViewModel.wkProcessPool, contentViewModel: contentViewModel, appViewModel: appViewModel)
-                vm.load(urlString: url?.absoluteString ?? "")
-                if let tabID {
-                    guard let index = contentViewModel.tabs.firstIndex(where: {$0.id == tabID}) else {
-                        return
-                    }
-                    contentViewModel.tabs[index].webViewModel.load(urlString: url?.absoluteString ?? "")
-                } else {
-                    let tab = ATab(webViewModel: vm, restoredURLs: [])
-                    contentViewModel.tabs.append(tab)
-                    contentViewModel.currentTab = tab.id
-                }
-                return
-            }
-            let vm = WebViewModel(processPool: contentViewModel.wkProcessPool, contentViewModel: contentViewModel, appViewModel: appViewModel)
-            vm.load(urlString: "https://\(text)")
-            if let tabID {
-                guard let index = contentViewModel.tabs.firstIndex(where: {$0.id == tabID}) else {
-                    return
-                }
-                contentViewModel.tabs[index].webViewModel.load(urlString: text)
-            } else {
-                let tab = ATab(webViewModel: vm, restoredURLs: [])
-                contentViewModel.tabs.append(tab)
-                contentViewModel.currentTab = tab.id
-            }
-            return
+        print(text)
+        
+        if let _ = text.wholeMatch(of: Regexpr.url.regex) {
+            processURL(text: text, tabID: tabID, hasProtocol: true)
+            print("url")
+        } else if let _ = text.wholeMatch(of: Regexpr.urlWithoutProtocol.regex) {
+            processURL(text: text, tabID: tabID)
+            print("urlw")
+        } else if let _ = text.wholeMatch(of: Regexpr.ip.regex) {
+            processURL(text: text, tabID: tabID, hasProtocol: true)
+            print("ip")
+        } else if let _ = text.wholeMatch(of: Regexpr.ipWithoutProtocol.regex) {
+            processURL(text: text, tabID: tabID)
+            print("ipW")
+        } else {
+            processURL(text: text, tabID: tabID, searchEngine: true)
+            print(Regexpr.ip.regex)
         }
+    }
+    
+    private func processURL(text: String, tabID: UUID?, hasProtocol: Bool = false, searchEngine: Bool = false) {
         let vm = WebViewModel(processPool: contentViewModel.wkProcessPool, contentViewModel: contentViewModel, appViewModel: appViewModel)
-        vm.load(urlString: text)
+        var url: URL? = nil
+        if !searchEngine {
+            vm.load(urlString: "\(hasProtocol ? "": "https://")\(text)")
+        } else {
+            let searchEngine = SearchEngine(rawValue: UDKey.searchEngine.intValue) ?? .duckduckgo
+            url = searchEngine.makeSearchUrl(text)
+            vm.load(urlString: url?.absoluteString ?? "")
+        }
         if let tabID {
             guard let index = contentViewModel.tabs.firstIndex(where: {$0.id == tabID}) else {
                 return
             }
-            contentViewModel.tabs[index].webViewModel.load(urlString: text)
+            if !searchEngine {
+                contentViewModel.tabs[index].webViewModel.load(urlString: "\(hasProtocol ? "": "https://")\(text)")
+            } else {
+                contentViewModel.tabs[index].webViewModel.load(urlString: url?.absoluteString ?? "")
+            }
         } else {
             let tab = ATab(webViewModel: vm, restoredURLs: [])
             contentViewModel.tabs.append(tab)

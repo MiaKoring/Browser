@@ -85,6 +85,17 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             }
         }
     }
+    func application(_ application: NSApplication, open urls: [URL]) {
+        print("urls opened")
+        for url in urls {
+            if let openWindow = appViewModel?.openWindow {
+                openWindow(url)
+            } else {
+                print("failed")
+            }
+        }
+    }
+    
     
     private func insertTo(context: ModelContext, valuesOf values: ContentViewModel, id: String) {
         for i in 0..<values.tabs.count {

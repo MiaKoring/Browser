@@ -95,18 +95,6 @@ extension ContentView: View, TabOpener {
                     }
                 }
             }
-            .overlay {
-                ZStack {
-                    if showInputBar {
-                        InputBar(text: $inputBarText, showInputBar: $showInputBar) { text in
-                            handleInputBarSubmit(text: text)
-                            inputBarText = ""
-                            showInputBar = false
-                        }
-                        .frame(maxWidth: max(550, min(reader.size.width / 2, 800)))
-                    }
-                }
-            }
             .onChange(of: contentViewModel.triggerNewTab) {
                 showInputBar = true
             }
@@ -121,6 +109,14 @@ extension ContentView: View, TabOpener {
             }
             .onAppear() {
                 onAppear()
+            }
+            .sheet(isPresented: $showInputBar) {
+                InputBar(text: $inputBarText, showInputBar: $showInputBar) { text in
+                    handleInputBarSubmit(text: text)
+                    inputBarText = ""
+                    showInputBar = false
+                }
+                .frame(maxWidth: max(550, min(reader.size.width / 2, 800)))
             }
         }
         .onDisappear {

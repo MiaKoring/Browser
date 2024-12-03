@@ -12,14 +12,11 @@ extension InputBar {
         async let serverItems = await suggestionsFromServer(for: text)
         
         let results = await Array(searchEngineItems.prefix(5)).sorted(by: {
-            if let regex = Regexpr.urlWithoutProtocol.regex {
-                let a = $0.wholeMatch(of: regex)
-                let b = $1.wholeMatch(of: regex)
-                return a != nil && b == nil
-            }
-            return false
+            let a = $0.wholeMatch(of: Regexpr.urlWithoutProtocol.regex)
+            let b = $1.wholeMatch(of: Regexpr.urlWithoutProtocol.regex)
+            return a != nil && b == nil
         }).map({
-            if let regex = Regexpr.urlWithoutProtocol.regex, let _ = $0.wholeMatch(of: regex) {
+            if let _ = $0.wholeMatch(of: Regexpr.urlWithoutProtocol.regex) {
                 SearchSuggestion(title: $0, urlString: "https://\($0)", origin: .searchEngine)
             } else {
                 SearchSuggestion(title: $0, urlString: "https://duckduckgo.com/?q=\($0.replacingOccurrences(of: " ", with: "+"))", origin: .searchEngine)

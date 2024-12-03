@@ -8,4 +8,6 @@
 enum Regexpr {
     case url
     case urlWithoutProtocol
+    case ip
+    case ipWithoutProtocol
 }

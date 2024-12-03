@@ -25,7 +25,7 @@ struct InputBar: View {
                 .focused($inputFocused)
                 .padding()
                 .background() {
-                    RoundedRectangle(cornerRadius: 10)
+                    RoundedRectangle(cornerRadius: 5)
                         .fill(selectedResult == 0 ? .myPurple.mix(with: .white, by: 0.1).opacity(0.3): .myPurple.mix(with: .white, by: 0.07).opacity(0.3))
                 }
                 .onSubmit {
@@ -41,6 +41,18 @@ struct InputBar: View {
                     showInputBar = false
                     return .handled
                 }
+                .onKeyPress { event in
+                    if event.key == .tab && event.modifiers.isEmpty {
+                        updateSelection(up: false)
+                        return .handled
+                    }
+                    if event.key == KeyEquivalent("\u{19}") && event.modifiers == .shift {
+                        updateSelection(up: true)
+                        return .handled
+                    }
+                    return .ignored
+                }
+                
             if !quickSearchResults.isEmpty {
                 VStack {
                     ForEach(quickSearchResults, id: \.id) { result in
@@ -59,7 +71,7 @@ struct InputBar: View {
                         .padding(10)
                         .background {
                             if (quickSearchResults.firstIndex(where: {$0.id == result.id}) ?? -1) + 1 == selectedResult {
-                                RoundedRectangle(cornerRadius: 10)
+                                RoundedRectangle(cornerRadius: 5)
                                     .stroke(lineWidth: 2)
                                     .foregroundStyle(.myPurple.mix(with: .white, by: 0.15).opacity(0.6))
                             }
@@ -70,52 +82,16 @@ struct InputBar: View {
                         }
                     }
                 }
-                .overlay(alignment: .bottomTrailing) {
-                    VStack {
-                        Button {
-                            updateSelection()
-                        } label: {
-                            HStack {
-                                (Text(Image(systemName: "command")) + Text("A"))
-                                    .opacity(0.6)
-                                    .bold()
-                                    .padding(3)
-                                    .background {
-                                        RoundedRectangle(cornerRadius: 3)
-                                            .fill(.regularMaterial)
-                                    }
-                            }
-                        }
-                        .keyboardShortcut("a", modifiers: .command)
-                        .buttonStyle(.plain)
-                        Button {
-                            updateSelection(up: false)
-                        } label: {
-                            HStack {
-                                (Text(Image(systemName: "command")) + Text("D"))
-                                    .opacity(0.6)
-                                    .bold()
-                                    .padding(3)
-                                    .background {
-                                        RoundedRectangle(cornerRadius: 3)
-                                            .fill(.regularMaterial)
-                                    }
-                            }
-                        }
-                        .keyboardShortcut("d", modifiers: .command)
-                        .buttonStyle(.plain)
-                    }
-                }
             }
         }
         .padding(10)
         .background() {
-            RoundedRectangle(cornerRadius: 15)
+            RoundedRectangle(cornerRadius: 10)
                 .fill(.myPurple.opacity(0.5))
                 .background(.ultraThinMaterial)
-                .clipShape(RoundedRectangle(cornerRadius: 15))
+                .clipShape(RoundedRectangle(cornerRadius: 10))
                 .overlay {
-                    RoundedRectangle(cornerRadius: 15)
+                    RoundedRectangle(cornerRadius: 10)
                         .stroke(lineWidth: 2)
                         .foregroundStyle(.myPurple.mix(with: .white, by: 0.15).opacity(0.4))
                 }
