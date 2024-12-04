@@ -21,6 +21,8 @@ class ContentViewModel: NSObject, ObservableObject {
     var triggerRestoredHistory: Bool = false
     var showInlineSearch: Bool = false
     var lastInlineQuery: String = ""
+    var isLoaded: Bool = false
+    var showHistory: Bool = false
     
     init(id: String) {
         self.id = id
@@ -58,6 +60,7 @@ struct ContentView {
     @State var window: NSWindow? = nil
     @State var showRestoredHistory: Bool = false
     @Environment(\.scenePhase) var scenePhase
+    @State var showHistory = false
     
     
     func onAppear() {

@@ -5,6 +5,7 @@
 //  Created by Mia Koring on 27.11.24.
 //
 import SwiftUI
+import SwiftData
 import WebKit
 import Combine
 
@@ -19,9 +20,12 @@ class WebViewModel: NSObject, ObservableObject {
     @ObservedObject var contentViewModel: ContentViewModel
     @ObservedObject var appViewModel: AppViewModel
     
-    private var webView: AWKWebView?
-    private var cancellables: Set<AnyCancellable> = []
-    private var processPool: WKProcessPool
+    var historyBlocked: [URL: Double] = [:]
+    var webView: AWKWebView?
+    var cancellables: Set<AnyCancellable> = []
+    var processPool: WKProcessPool
+    var downloadDelegate: DownloadDelegate = DownloadDelegate()
+    var cache: Bool? = nil
     
     init(contentViewModel: ContentViewModel, appViewModel: AppViewModel) {
         self.processPool = contentViewModel.wkProcessPool
@@ -183,6 +187,39 @@ class WebViewModel: NSObject, ObservableObject {
         webView?.load(request)
     }
     
+    func webView(_ webView: WKWebView, navigationAction: WKNavigationAction, didBecome download: WKDownload) {
+        download.delegate = downloadDelegate
+    }
+        
+    func webView(_ webView: WKWebView, navigationResponse: WKNavigationResponse, didBecome download: WKDownload) {
+        download.delegate = downloadDelegate
+    }
+    
+    func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
+        appendHistory()
+    }
+    
+    func appendHistory() {
+        if let container = appViewModel.modelContainer, let url = currentURL, cache != nil {
+            if let blockedTime = historyBlocked[url], blockedTime > Date().timeIntervalSinceReferenceDate {
+                return
+            }
+            let context = ModelContext(container)
+            let rangeStart = Calendar.current.startOfDay(for: Date.now).timeIntervalSinceReferenceDate
+            var dayDescriptor = FetchDescriptor<HistoryDay>(predicate: #Predicate<HistoryDay>{$0.time >= rangeStart})
+            dayDescriptor.fetchLimit = 1
+            if let day = try? context.fetch(dayDescriptor).first {
+                day.historyItems.append(HistoryItem(time: Date.now.timeIntervalSinceReferenceDate, url: url, title: title))
+                try? context.save()
+            } else {
+                let day = HistoryDay(time: Date().timeIntervalSinceReferenceDate, historyItems: [HistoryItem(time: Date.now.timeIntervalSinceReferenceDate, url: url, title: title)])
+                context.insert(day)
+                try? context.save()
+            }
+            historyBlocked[url] = Date.now.timeIntervalSinceReferenceDate + 300
+        }
+    }
+    
     func setupBindings() {
         webView?.publisher(for: \.canGoBack)
             .receive(on: DispatchQueue.main)
@@ -235,178 +272,3 @@ class WebViewModel: NSObject, ObservableObject {
     }
 }
 
-extension WebViewModel: WKUIDelegate {
-    func webView(_ webView: WKWebView, createWebViewWith configuration: WKWebViewConfiguration, for navigationAction: WKNavigationAction, windowFeatures: WKWindowFeatures) -> WKWebView? {
-        
-        if let customAction = (webView as? AWKWebView)?.contextualMenuAction {
-            print(customAction)
-            switch customAction {
-            case .openInNewTab:
-                return openInNewTab(configuration: configuration)
-            case .openInBackground:
-                let newWebViewModel = WebViewModel(config: configuration, processPool: self.processPool, contentViewModel: contentViewModel, appViewModel: appViewModel)
-                let newTab = ATab(webViewModel: newWebViewModel, restoredURLs: [])
-                contentViewModel.tabs.append(newTab)
-                print("openInBackground")
-                return newWebViewModel.webView
-            case .openInNewWindow:
-                guard let url = navigationAction.request.url, let open = appViewModel.openWindow else { return nil }
-                open(url)
-                return nil
-            }
-        } else if navigationAction.targetFrame == nil {
-            return openInNewTab(configuration: configuration)
-        } else {
-            return nil
-        }
-    }
-    
-    func webViewDidClose(_ webView: WKWebView) {
-        contentViewModel.handleClose()
-    }
-    
-    func openInNewTab(configuration: WKWebViewConfiguration) -> WKWebView? {
-        let newWebViewModel = WebViewModel(config: configuration, processPool: self.processPool, contentViewModel: contentViewModel, appViewModel: appViewModel)
-        let newTab = ATab(webViewModel: newWebViewModel, restoredURLs: [])
-        if let index = contentViewModel.tabs.firstIndex(where: {$0.id == contentViewModel.currentTab}) {
-            contentViewModel.tabs.insert(newTab, at: index + 1)
-        } else {
-            contentViewModel.tabs.append(newTab)
-        }
-        contentViewModel.currentTab = newTab.id
-        return newWebViewModel.webView
-    }
-}
-
-extension WebViewModel: WKNavigationDelegate {
-    func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction) async -> WKNavigationActionPolicy {
-        //TODO: verlauf
-        /*if let url = navigationAction.request.url {
-            switch navigationAction.navigationType {
-            case .reload:
-                break
-            case .linkActivated:
-                
-            case .formSubmitted:
-                <#code#>
-            case .backForward:
-                <#code#>
-            case .formResubmitted:
-                <#code#>
-            case .other:
-                <#code#>
-            @unknown default:
-                break
-            }
-        }*/
-        return .allow
-    }
-}
-
-extension WebViewModel {
-    private func injectJavaScript() {
-        let jsString = """
-        var markInstance = new Mark(document.querySelector("body"));
-        let highlights = [];
-        let currentIndex = 0;
-        
-        function highlightText(searchTerm, options) {
-            markInstance.unmark({"className": "amethystHighlight"});
-            highlights = [];
-            markInstance.mark(searchTerm, options); 
-            return document.querySelectorAll('.amethystHighlight').length;
-        }
-        
-        function removeHighlights() {
-            markInstance.unmark({"className": "amethystHighlight"});
-        }
-
-        function navigateHighlights(direction) {
-            if (highlights.length === 0) {
-                highlights = document.querySelectorAll('.amethystHighlight');
-            }
-            if (highlights.length === 0) return 0;
-
-            // Entferne vorherige Markierung
-            highlights[currentIndex]?.classList.remove('amethystCurrent-highlight');
-
-            // Aktualisiere den Index
-            currentIndex += direction;
-            if (currentIndex < 0) currentIndex = highlights.length - 1;
-            if (currentIndex >= highlights.length) currentIndex = 0;
-
-            // Markiere und scrolle zum aktuellen Treffer
-            const current = highlights[currentIndex];
-            current.classList.add('amethystCurrent-highlight');
-            current.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            return currentIndex;
-        }
-        """
-        let markScript = WKUserScript(source: markjs, injectionTime: .atDocumentEnd, forMainFrameOnly: true)
-        let userScript = WKUserScript(source: jsString, injectionTime: .atDocumentEnd, forMainFrameOnly: true)
-        webView?.configuration.userContentController.addUserScript(markScript)
-        webView?.configuration.userContentController.addUserScript(userScript)
-    }
-    
-    func injectCSSGlobally() {
-        let cssString = """
-        .amethystHighlight {
-            background-color: yellow;
-            
-            color: black;
-        }
-        .amethystCurrent-highlight {
-            background-color: orange;
-        }
-        """
-        let jsCode = """
-        var style = document.createElement('style');
-        style.type = 'text/css';
-        style.innerHTML = `\(cssString)`;
-        document.head.appendChild(style);
-        """
-        let userScript = WKUserScript(source: jsCode, injectionTime: .atDocumentEnd, forMainFrameOnly: true)
-        webView?.configuration.userContentController.addUserScript(userScript)
-    }
-    
-    func navigateHighlight(forward: Bool, completion: @escaping(Any?, (any Error)?) -> Void) {
-        let direction = forward ? 1 : -1
-        let jsCode = "navigateHighlights(\(direction));"
-        webView?.evaluateJavaScript(jsCode) { result, error in
-            completion(result, error)
-        }
-    }
-    func removeHighlights() {
-        let jsCode = """
-        removeHighlights();
-        """
-        webView?.evaluateJavaScript(jsCode) { result, error in
-            if let error = error {
-                print("Fehler beim Entfernen des Highlightings: \(error)")
-            }
-        }
-    }
-    func highlight(searchTerm: String, caseSensitive: Bool = false, completion: @escaping(Any?, (any Error)?) -> Void) {
-        let jsCode = """
-        var options = {
-            "element": "span",
-            "className": "amethystHighlight",
-            "caseSensitive": \(caseSensitive ? "true": "false"),
-        };
-        highlightText('\(searchTerm)', options);
-        """
-        webView?.evaluateJavaScript(jsCode) { result, error in
-            completion(result, error)
-        }
-    }
-}
-/*function highlightText(searchTerm, flags) {
-removeHighlights();
-highlights = [];
-const bodyText = document.body.innerHTML;
-const regex = new RegExp(`(${searchTerm})`, `${flags}`);
-const highlighted = bodyText.replace(regex, '<span class="highlight">$1</span>');
-document.body.innerHTML = highlighted;
-return document.querySelectorAll('.highlight').length;
-}
-*/

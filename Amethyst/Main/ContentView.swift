@@ -130,6 +130,14 @@ extension ContentView: View, TabOpener {
                 }
                 .frame(maxWidth: max(550, min(reader.size.width / 2, 800)))
             }
+            .onChange(of: contentViewModel.currentTab) {
+                if contentViewModel.currentTab != nil {
+                    contentViewModel.isLoaded = true
+                }
+            }
+            .onChange(of: contentViewModel.showHistory) {
+                showHistory = contentViewModel.showHistory
+            }
         }
         .onDisappear {
             NotificationCenter.default.removeObserver(
@@ -144,6 +152,12 @@ extension ContentView: View, TabOpener {
             RestoredHistory()
                 .environment(contentViewModel)
                 .frame(width: 350, height: 400)
+        }
+        .sheet(isPresented: $showHistory) {
+            contentViewModel.showHistory = false
+        } content: {
+            HistoryView()
+                .frame(width: 400, height: 500)
         }
     }
     

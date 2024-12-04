@@ -4,6 +4,7 @@
 //
 //  Created by Mia Koring on 27.11.24.
 //
+import SwiftData
 import SwiftUI
 import WebKit
 
@@ -15,6 +16,7 @@ class AppViewModel: NSObject, ObservableObject, NSWindowDelegate {
     var openMiniInNewTab: ((URL?, String, Bool) -> Void)? = nil
     var openWindowByID: ((String) -> Void)? = nil
     var highlightedWindow: String = ""
+    var modelContainer: ModelContainer? = nil
     
     func windowDidBecomeKey(_ notification: Notification) {
         if let window = notification.object as? NSWindow {

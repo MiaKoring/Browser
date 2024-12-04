@@ -25,9 +25,10 @@ struct AmethystApp: App {
     
     init() {
         do {
-            container = try ModelContainer(for: SavedTab.self, BackForwardListItem.self, migrationPlan: TabMigration.self)
+            container = try ModelContainer(for: SavedTab.self, BackForwardListItem.self, HistoryItem.self, HistoryDay.self, migrationPlan: TabMigration.self)
+            
         } catch {
-            fatalError("failed to initialize model container")
+            fatalError("failed to initialize model container: \(error.localizedDescription)")
         }
         self.appViewModel = AppViewModel()
     }
@@ -87,6 +88,16 @@ struct AmethystApp: App {
                     navigate(back: false)
                 }
                 .keyboardShortcut("Ä", modifiers: .command)
+                Button("Reload") {
+                    reload()
+                }
+                .keyboardShortcut("r", modifiers: .command)
+                .disabled(reloadDisabled())
+                Button("Reload from source") {
+                    reload(fromSource: true)
+                }
+                .keyboardShortcut("r", modifiers: [.command, .shift])
+                .disabled(reloadDisabled())
                 Button("Previous Tab") {
                     navigateTabs()
                 }
@@ -107,6 +118,12 @@ struct AmethystApp: App {
                 }
                 .keyboardShortcut("t", modifiers: [.shift, .command])
                 .disabled(isTabHistoryDisabled())
+            }
+            CommandMenu("Archive") {
+                Button("Show History") {
+                    showHistory()
+                }
+                .keyboardShortcut("y", modifiers: .command)
             }
         }
     }

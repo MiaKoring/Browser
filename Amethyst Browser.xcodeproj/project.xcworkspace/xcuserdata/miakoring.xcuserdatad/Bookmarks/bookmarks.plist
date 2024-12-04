@@ -12,13 +12,13 @@
 					<key>EndingColumnNumber</key>
 					<string>0</string>
 					<key>EndingLineNumber</key>
-					<string>283</string>
+					<string>273</string>
 					<key>StartingColumnNumber</key>
 					<string>0</string>
 					<key>StartingLineNumber</key>
-					<string>282</string>
+					<string>272</string>
 					<key>Timestamp</key>
-					<string>755003932.407586</string>
+					<string>755040627.086445</string>
 				</dict>
 				<key>rebasable-url</key>
 				<dict>
@@ -34,16 +34,14 @@
 			<key>text-context</key>
 			<dict>
 				<key>focused</key>
-				<string>        //TODO: verlauf
+				<string>}
 </string>
 				<key>leading</key>
-				<string>extension WebViewModel: WKNavigationDelegate {
-    func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction) async -&gt; WKNavigationActionPolicy {
+				<string>            .store(in: &amp;cancellables)
+    }
 </string>
 				<key>trailing</key>
-				<string>        /*if let url = navigationAction.request.url {
-            switch navigationAction.navigationType {
-            case .reload:
+				<string>
 </string>
 			</dict>
 			<key>type</key>

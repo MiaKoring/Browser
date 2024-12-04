@@ -46,8 +46,8 @@ extension AmethystApp {
     }
     
     func navigate(back: Bool = true) {
-        guard let currentTabID = contentViewModel(for: appViewModel.currentlyActiveWindowId)?.currentTab else { return }
-        if let model = contentViewModel.tabs.first(where: {$0.id == currentTabID})?.webViewModel {
+        guard let contentViewModel = contentViewModel(for: appViewModel.currentlyActiveWindowId) else { return }
+        if let model = contentViewModel.tabs.first(where: {$0.id == contentViewModel.currentTab})?.webViewModel {
             if back {
                 model.goBack()
             } else {
@@ -57,13 +57,13 @@ extension AmethystApp {
     }
     
     func navigateTabs(back: Bool = true) {
-        guard let contentViewModel = contentViewModel(for: appViewModel.currentlyActiveWindowId) else { return }
+        guard let contentViewModel = contentViewModel(for: appViewModel.currentlyActiveWindowId), contentViewModel.tabs.count > 0 else { return }
         if let currentTab = contentViewModel.tabs.first(where: {$0.id == contentViewModel.currentTab}) {
             currentTab.webViewModel.removeHighlights()
         }
         contentViewModel.showInlineSearch = false
         if back {
-            guard let index = contentViewModel.tabs.firstIndex(where: {$0.id == contentViewModel.currentTab}) else {
+            guard let _ = contentViewModel.currentTab, let index = contentViewModel.tabs.firstIndex(where: {$0.id == contentViewModel.currentTab}) else {
                 contentViewModel.currentTab = contentViewModel.tabs[0].id
                 return
             }
@@ -87,16 +87,8 @@ extension AmethystApp {
     func tabSwitchingDisabled(back: Bool = true) -> Bool {
         let currentWindow = appViewModel.currentlyActiveWindowId
         guard let contentViewModel = contentViewModel(for: currentWindow) else { return true }
-        let currentTabId = contentViewModel.currentTab
         let tabCount = contentViewModel.tabs.count
-        let notEnoughTabs = tabCount < 1
-        var indexOk: Bool
-        if back {
-            indexOk = contentViewModel.tabs.firstIndex(where: {$0.id == currentTabId}) ?? 0 > 0
-        } else {
-            indexOk = contentViewModel.tabs.firstIndex(where: {$0.id == currentTabId}) ?? Int.max < tabCount - 1
-        }
-        return notEnoughTabs || !indexOk
+        return tabCount <= 0
     }
     
     func openTabHistory() {
@@ -112,7 +104,24 @@ extension AmethystApp {
         return false
     }
     
+    func reload(fromSource: Bool = false) {
+        guard let contentViewModel = contentViewModel(for: appViewModel.currentlyActiveWindowId) else { return }
+        if let tab = contentViewModel.tabs.first(where: {$0.id == contentViewModel.currentTab}) {
+            if !fromSource {
+                tab.webViewModel.webView?.reload()
+            } else {
+                tab.webViewModel.webView?.reloadFromOrigin()
+            }
+        }
+    }
+    
+    func reloadDisabled() -> Bool {
+        guard let contentViewModel = contentViewModel(for: appViewModel.currentlyActiveWindowId) else { return true }
+        return contentViewModel.tabs.isEmpty || contentViewModel.currentTab == nil || contentViewModel.tabs.first(where: {$0.id == contentViewModel.currentTab}) == nil
+    }
+    
     func onAppear() {
+        appViewModel.modelContainer = container
         appDelegate.configure(appViewModel: appViewModel, contentViewModel: contentViewModel, contentViewModel2: contentViewModel2, contentViewModel3: contentViewModel3, container: container)
         appViewModel.openWindow = { url in
             openWindow(value: url)
@@ -154,6 +163,11 @@ extension AmethystApp {
         contentViewModel.showInlineSearch.toggle()
     }
     
+    func showHistory() {
+        guard let contentViewModel = contentViewModel(for: appViewModel.currentlyActiveWindowId) else { return }
+        contentViewModel.showHistory.toggle()
+    }
+    
     func contentViewModel(for id: String) -> ContentViewModel? {
         switch id {
         case "window1":
@@ -171,7 +185,7 @@ extension AmethystApp {
     func createWindow(id: String, viewModel: ContentViewModel) -> some Scene {
         Window("Amethyst Browser", id: id) {
             ContentView()
-                .frame(minWidth: 600, minHeight: 400)
+                .frame(minWidth: 600, minHeight: 600)
                 .ignoresSafeArea(.container, edges: .top)
                 .modelContainer(container)
                 .onAppear {

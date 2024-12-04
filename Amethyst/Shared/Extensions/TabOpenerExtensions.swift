@@ -27,19 +27,14 @@ extension TabOpener {
         
         if let _ = text.wholeMatch(of: Regexpr.url.regex) {
             processURL(text: text, tabID: tabID, hasProtocol: true)
-            print("url")
         } else if let _ = text.wholeMatch(of: Regexpr.urlWithoutProtocol.regex) {
             processURL(text: text, tabID: tabID)
-            print("urlw")
         } else if let _ = text.wholeMatch(of: Regexpr.ip.regex) {
             processURL(text: text, tabID: tabID, hasProtocol: true)
-            print("ip")
         } else if let _ = text.wholeMatch(of: Regexpr.ipWithoutProtocol.regex) {
             processURL(text: text, tabID: tabID)
-            print("ipW")
         } else {
             processURL(text: text, tabID: tabID, searchEngine: true)
-            print(Regexpr.ip.regex)
         }
     }
     
