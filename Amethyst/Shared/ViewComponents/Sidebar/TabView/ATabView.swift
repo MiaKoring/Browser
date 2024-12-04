@@ -146,6 +146,10 @@ struct TabButton: View {
             }
         }
         .onTapGesture {
+            if let currentTab = contentViewModel.tabs.first(where: {$0.id == contentViewModel.currentTab}) {
+                currentTab.webViewModel.removeHighlights()
+            }
+            contentViewModel.showInlineSearch = false
             contentViewModel.currentTab = id
         }
     }

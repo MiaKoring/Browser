@@ -30,7 +30,7 @@ class WebViewModel: NSObject, ObservableObject {
         super.init()
         
         let webConfiguration = WKWebViewConfiguration()
-        webConfiguration.applicationNameForUserAgent = "Mozilla/5.0 (Macintosh; Apple Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Version/13.1 Safari/537.36"
+        webConfiguration.applicationNameForUserAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.1.1 Safari/605.1.15"
         webConfiguration.defaultWebpagePreferences.allowsContentJavaScript = true
         webConfiguration.allowsInlinePredictions = true
         webConfiguration.allowsAirPlayForMediaPlayback = true
@@ -38,12 +38,15 @@ class WebViewModel: NSObject, ObservableObject {
         webConfiguration.suppressesIncrementalRendering = false
         webConfiguration.processPool = processPool
         webConfiguration.preferences.javaScriptCanOpenWindowsAutomatically = true
+        webConfiguration.websiteDataStore = WKWebsiteDataStore.default()
         self.webView = AWKWebView(frame: .zero, configuration: webConfiguration)
         self.webView?.allowsBackForwardNavigationGestures = false
         self.webView?.underPageBackgroundColor = .myPurple
         self.webView?.uiDelegate = self
         self.webView?.navigationDelegate = self
         setupBindings()
+        injectJavaScript()
+        injectCSSGlobally()
     }
     
     init(processPool: WKProcessPool, contentViewModel: ContentViewModel, appViewModel: AppViewModel) {
@@ -53,7 +56,7 @@ class WebViewModel: NSObject, ObservableObject {
         super.init()
         
         let webConfiguration = WKWebViewConfiguration()
-        webConfiguration.applicationNameForUserAgent = "Mozilla/5.0 (Macintosh; Apple Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Version/13.1 Safari/537.36"
+        webConfiguration.applicationNameForUserAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.1.1 Safari/605.1.15"
         webConfiguration.defaultWebpagePreferences.allowsContentJavaScript = true
         webConfiguration.allowsInlinePredictions = true
         webConfiguration.allowsAirPlayForMediaPlayback = true
@@ -61,12 +64,15 @@ class WebViewModel: NSObject, ObservableObject {
         webConfiguration.suppressesIncrementalRendering = false
         webConfiguration.processPool = processPool
         webConfiguration.preferences.javaScriptCanOpenWindowsAutomatically = true
+        webConfiguration.websiteDataStore = WKWebsiteDataStore.default()
         self.webView = AWKWebView(frame: .zero, configuration: webConfiguration)
         self.webView?.allowsBackForwardNavigationGestures = false
         self.webView?.underPageBackgroundColor = .myPurple
         self.webView?.uiDelegate = self
         self.webView?.navigationDelegate = self
         setupBindings()
+        injectJavaScript()
+        injectCSSGlobally()
     }
     
     init(processPool: WKProcessPool, restore tab: SavedTab, contentViewModel: ContentViewModel, appViewModel: AppViewModel) {
@@ -83,6 +89,7 @@ class WebViewModel: NSObject, ObservableObject {
         webConfiguration.suppressesIncrementalRendering = false
         webConfiguration.processPool = processPool
         webConfiguration.preferences.javaScriptCanOpenWindowsAutomatically = true
+        webConfiguration.websiteDataStore = WKWebsiteDataStore.default()
         self.webView = AWKWebView(frame: .zero, configuration: webConfiguration)
         self.webView?.allowsBackForwardNavigationGestures = false
         self.webView?.underPageBackgroundColor = .myPurple
@@ -93,6 +100,8 @@ class WebViewModel: NSObject, ObservableObject {
         }
         
         setupBindings()
+        injectJavaScript()
+        injectCSSGlobally()
     }
     
     init(config: WKWebViewConfiguration, processPool: WKProcessPool, contentViewModel: ContentViewModel, appViewModel: AppViewModel) {
@@ -107,6 +116,7 @@ class WebViewModel: NSObject, ObservableObject {
         self.webView?.navigationDelegate = self
         
         setupBindings()
+        injectJavaScript()
     }
     
     func deinitialize() {
@@ -292,3 +302,111 @@ extension WebViewModel: WKNavigationDelegate {
         return .allow
     }
 }
+
+extension WebViewModel {
+    private func injectJavaScript() {
+        let jsString = """
+        var markInstance = new Mark(document.querySelector("body"));
+        let highlights = [];
+        let currentIndex = 0;
+        
+        function highlightText(searchTerm, options) {
+            markInstance.unmark({"className": "amethystHighlight"});
+            highlights = [];
+            markInstance.mark(searchTerm, options); 
+            return document.querySelectorAll('.amethystHighlight').length;
+        }
+        
+        function removeHighlights() {
+            markInstance.unmark({"className": "amethystHighlight"});
+        }
+
+        function navigateHighlights(direction) {
+            if (highlights.length === 0) {
+                highlights = document.querySelectorAll('.amethystHighlight');
+            }
+            if (highlights.length === 0) return 0;
+
+            // Entferne vorherige Markierung
+            highlights[currentIndex]?.classList.remove('amethystCurrent-highlight');
+
+            // Aktualisiere den Index
+            currentIndex += direction;
+            if (currentIndex < 0) currentIndex = highlights.length - 1;
+            if (currentIndex >= highlights.length) currentIndex = 0;
+
+            // Markiere und scrolle zum aktuellen Treffer
+            const current = highlights[currentIndex];
+            current.classList.add('amethystCurrent-highlight');
+            current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            return currentIndex;
+        }
+        """
+        let markScript = WKUserScript(source: markjs, injectionTime: .atDocumentEnd, forMainFrameOnly: true)
+        let userScript = WKUserScript(source: jsString, injectionTime: .atDocumentEnd, forMainFrameOnly: true)
+        webView?.configuration.userContentController.addUserScript(markScript)
+        webView?.configuration.userContentController.addUserScript(userScript)
+    }
+    
+    func injectCSSGlobally() {
+        let cssString = """
+        .amethystHighlight {
+            background-color: yellow;
+            
+            color: black;
+        }
+        .amethystCurrent-highlight {
+            background-color: orange;
+        }
+        """
+        let jsCode = """
+        var style = document.createElement('style');
+        style.type = 'text/css';
+        style.innerHTML = `\(cssString)`;
+        document.head.appendChild(style);
+        """
+        let userScript = WKUserScript(source: jsCode, injectionTime: .atDocumentEnd, forMainFrameOnly: true)
+        webView?.configuration.userContentController.addUserScript(userScript)
+    }
+    
+    func navigateHighlight(forward: Bool, completion: @escaping(Any?, (any Error)?) -> Void) {
+        let direction = forward ? 1 : -1
+        let jsCode = "navigateHighlights(\(direction));"
+        webView?.evaluateJavaScript(jsCode) { result, error in
+            completion(result, error)
+        }
+    }
+    func removeHighlights() {
+        let jsCode = """
+        removeHighlights();
+        """
+        webView?.evaluateJavaScript(jsCode) { result, error in
+            if let error = error {
+                print("Fehler beim Entfernen des Highlightings: \(error)")
+            }
+        }
+    }
+    func highlight(searchTerm: String, caseSensitive: Bool = false, completion: @escaping(Any?, (any Error)?) -> Void) {
+        let jsCode = """
+        var options = {
+            "element": "span",
+            "className": "amethystHighlight",
+            "caseSensitive": \(caseSensitive ? "true": "false"),
+        };
+        highlightText('\(searchTerm)', options);
+        """
+        webView?.evaluateJavaScript(jsCode) { result, error in
+            completion(result, error)
+        }
+    }
+}
+/*function highlightText(searchTerm, flags) {
+removeHighlights();
+highlights = [];
+const bodyText = document.body.innerHTML;
+const regex = new RegExp(`(${searchTerm})`, `${flags}`);
+const highlighted = bodyText.replace(regex, '<span class="highlight">$1</span>');
+document.body.innerHTML = highlighted;
+return document.querySelectorAll('.highlight').length;
+}
+*/

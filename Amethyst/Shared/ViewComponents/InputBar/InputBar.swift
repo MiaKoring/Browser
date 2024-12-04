@@ -7,16 +7,7 @@
 
 import SwiftUI
 
-struct InputBar: View {
-    @Binding var text: String
-    @Binding var showInputBar: Bool
-    @FocusState var inputFocused: Bool
-    @State var timer: Timer? = nil
-    @State var lastInput: String = ""
-    @State var quickSearchResults: [SearchSuggestion] = []
-    @State var selectedResult: Int = 0
-    let onSubmit: (String) -> Void
-
+extension InputBar: View {
     var body: some View {
         VStack {
             TextField("Search or enter URL", text: $text)

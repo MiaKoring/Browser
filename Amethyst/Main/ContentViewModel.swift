@@ -19,6 +19,8 @@ class ContentViewModel: NSObject, ObservableObject {
     var wkProcessPool = WKProcessPool()
     var blockNotification: Bool = false
     var triggerRestoredHistory: Bool = false
+    var showInlineSearch: Bool = false
+    var lastInlineQuery: String = ""
     
     init(id: String) {
         self.id = id

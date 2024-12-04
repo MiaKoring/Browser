@@ -58,6 +58,10 @@ extension AmethystApp {
     
     func navigateTabs(back: Bool = true) {
         guard let contentViewModel = contentViewModel(for: appViewModel.currentlyActiveWindowId) else { return }
+        if let currentTab = contentViewModel.tabs.first(where: {$0.id == contentViewModel.currentTab}) {
+            currentTab.webViewModel.removeHighlights()
+        }
+        contentViewModel.showInlineSearch = false
         if back {
             guard let index = contentViewModel.tabs.firstIndex(where: {$0.id == contentViewModel.currentTab}) else {
                 contentViewModel.currentTab = contentViewModel.tabs[0].id
@@ -143,6 +147,11 @@ extension AmethystApp {
         appViewModel.openWindowByID = { id in
             openWindow(id: id)
         }
+    }
+    
+    func search() {
+        guard let contentViewModel = contentViewModel(for: appViewModel.currentlyActiveWindowId) else { return }
+        contentViewModel.showInlineSearch.toggle()
     }
     
     func contentViewModel(for id: String) -> ContentViewModel? {

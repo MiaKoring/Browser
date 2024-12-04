@@ -67,11 +67,18 @@ struct AmethystApp: App {
                 }
                 .keyboardShortcut("e", modifiers: [.command, .shift])
             }
-            CommandMenu("Navigation") {
-                Button("New Tab") {
+            CommandMenu("Find") {
+                Button("Open Searchbar") {
                     newTab()
                 }
                 .keyboardShortcut("t", modifiers: .command)
+                Button("Inline Search") {
+                    search()
+                }
+                .keyboardShortcut("f", modifiers: .command)
+                .disabled(!appViewModel.currentlyActiveWindowId.hasPrefix("window"))
+            }
+            CommandMenu("Navigation") {
                 Button("Go Back") {
                     navigate()
                 }

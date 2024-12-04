@@ -66,6 +66,18 @@ extension ContentView: View, TabOpener {
                             }
                         }
                     }
+                    if contentViewModel.showInlineSearch, let tab = contentViewModel.tabs.first(where: {$0.id == contentViewModel.currentTab}) {
+                        VStack {
+                            HStack {
+                                Spacer()
+                                DocumentSearchView(webViewModel: tab.webViewModel, text: contentViewModel.lastInlineQuery)
+                                    .environmentObject(contentViewModel)
+                                    .frame(maxWidth: 270)
+                                    .padding(30)
+                            }
+                            Spacer()
+                        }
+                    }
                     HStack {
                         if contentViewModel.isSidebarShown && !contentViewModel.isSidebarFixed {
                             Sidebar()
