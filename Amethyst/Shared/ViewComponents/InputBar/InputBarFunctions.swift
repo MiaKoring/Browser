@@ -13,7 +13,7 @@ extension InputBar {
             typealias MeiliResult = Result<Searchable<HistoryEntryResult>, Swift.Error>
             async let searchEngineItems = await SearchEngine.duckduckgo.quickResults(text)
             //async let serverItems = await suggestionsFromServer(for: text)
-            async let meiliItems: [SearchHit<HistoryEntryResult>]? = await withCheckedContinuation { continuation in
+            let meiliItems: [SearchHit<HistoryEntryResult>] = await withCheckedContinuation { continuation in
                 meili.index("history").search(SearchParameters(
                     query: text,
                     limit: 5,
@@ -24,10 +24,10 @@ extension InputBar {
                     switch result {
                     case .success(let res):
                         continuation.resume(returning: res.hits)
-                        print(res.hits)
+                        print("hits: \(res.hits)")
                     case .failure(let error):
-                        continuation.resume(returning: nil)
                         print(error.localizedDescription)
+                        continuation.resume(returning: [])
                     }
                 }
             }
@@ -43,8 +43,9 @@ extension InputBar {
                     SearchSuggestion(title: $0, urlString: "https://duckduckgo.com/?q=\($0.replacingOccurrences(of: " ", with: "+"))", origin: .searchEngine)
                 }
             })
+            print("DDG: \(results)")
             //let results1 = await serverItems
-            let meiliRes: [SearchSuggestion]? = await meiliItems?.compactMap {
+            let meiliRes: [SearchSuggestion] = meiliItems.compactMap {
                 if $0._rankingScore ?? 0 > 0.6 {
                     return SearchSuggestion(title: $0.title.isEmpty ? $0.url: $0.title, urlString: $0.url, origin: .history)
                 }
@@ -91,9 +92,10 @@ extension InputBar {
     }
     
     func makeResult(serverList: [SearchSuggestion], searchEngineList: [SearchSuggestion], meiliList: [SearchSuggestion]?) {
+        print("\n\n\nmakeResults\n\n\n")
         var result: [SearchSuggestion] = []
         if let meiliList {
-            if serverList.count + searchEngineList.count >= 2 {
+            if serverList.count + searchEngineList.count >= 1 {
                 result = Array(meiliList.prefix(3))
             } else {
                 result = Array(meiliList.prefix(5 - serverList.count + searchEngineList.count))
@@ -104,6 +106,7 @@ extension InputBar {
                 result.append(serverList[i])
             } else {
                 quickSearchResults = result
+                print(result)
                 return
             }
         }
@@ -112,9 +115,11 @@ extension InputBar {
                 result.append(searchEngineList[i])
             } else {
                 quickSearchResults = result
+                print(result)
                 return
             }
         }
+        quickSearchResults = result
     }
     
     func updateSelection(up: Bool = true) {

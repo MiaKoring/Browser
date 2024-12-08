@@ -205,7 +205,7 @@ class WebViewModel: NSObject, ObservableObject {
             }
             if let meili = appViewModel.meili {
                 let index = meili.index("history")
-                let param = SearchParameters(query: url., limit: 1, attributesToSearchOn: ["url"], filter: "url = '\(url.absoluteString)'")
+                let param = SearchParameters(query: url.absoluteString, limit: 1, attributesToSearchOn: ["url"], filter: "url = '\(url.absoluteString)'")
                 index.search(param) { (result: MeiliResult) in
                     switch result {
                     case .success(let result):
