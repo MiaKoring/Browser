@@ -234,10 +234,10 @@ class WebViewModel: NSObject, ObservableObject {
                             error.localizedDescription.contains("is not filterable. This index does not have configured filterable attributes."){
                             Task {
                                 do {
-                                    try await meili.createIndex(uid: "history", primaryKey: "id")
-                                    try await meili.index("history").updateSearchableAttributes(["url", "title"])
-                                    try await meili.index("history").updateFilterableAttributes(["url", "title", "id", "lastSeen", "amount"])
-                                    try await meili.index("history").updateSortableAttributes(["lastSeen", "amount"])
+                                    _ = try await meili.createIndex(uid: "history", primaryKey: "id")
+                                    _ = try await meili.index("history").updateSearchableAttributes(["url", "title"])
+                                    _ = try await meili.index("history").updateFilterableAttributes(["url", "title", "id", "lastSeen", "amount"])
+                                    _ = try await meili.index("history").updateSortableAttributes(["lastSeen", "amount"])
                                 } catch {
                                     print(error.localizedDescription)
                                 }

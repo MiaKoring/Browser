@@ -196,8 +196,6 @@ disown
                             if response.statusCode == 200 {
                                 state = "Success!"
                             } else {
-                                print(response.statusCode)
-                                print(String(data: res.0, encoding: .utf8))
                                 state = "An error occured. Please try setup again."
                             }
                         } catch {
