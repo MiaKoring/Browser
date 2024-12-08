@@ -111,8 +111,7 @@ struct TabButton: View {
                                 contentViewModel.currentTab = nil
                             }
                         }
-                        withAnimation(.linear(duration: 0.2)) {
-                            contentViewModel.tabs.first(where: {$0.id == id})?.webViewModel.deinitialize()
+                        withAnimation(.linear(duration: 0.2)) { contentViewModel.tabs.first(where: {$0.id == id})?.webViewModel.deinitialize()
                             contentViewModel.tabs.removeAll(where: {$0.id == id})
                         }
                     } label: {

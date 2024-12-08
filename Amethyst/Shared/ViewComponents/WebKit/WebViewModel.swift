@@ -8,6 +8,7 @@ import SwiftUI
 import SwiftData
 import WebKit
 import Combine
+import MeiliSearch
 
 class WebViewModel: NSObject, ObservableObject {
     @Published var canGoBack: Bool = false
@@ -124,24 +125,21 @@ class WebViewModel: NSObject, ObservableObject {
     }
     
     func deinitialize() {
-        DispatchQueue.main.async {
-            Task {
-                await self.webView?.pauseAllMediaPlayback()
-                await self.webView?.closeAllMediaPresentations()
-                await self.webView?.setCameraCaptureState(.none)
-                await self.webView?.setMicrophoneCaptureState(.none)
-                guard let url = URL(string: "https://bloombuddy.touchthegrass.de") else { return }
-                self.webView?.load( URLRequest(url: url))
-                self.cancellables.removeAll()
-                self.webView?.configuration.userContentController.removeAllUserScripts()
-                self.webView?.stopLoading()
-                self.webView?.removeFromSuperview()
-                
-                self.webView?.navigationDelegate = nil
-                self.webView?.uiDelegate = nil
-                self.webView = nil
-                print("deinitialized WebViewModel")
-            }
+        Task {
+            await self.webView?.pauseAllMediaPlayback()
+            await self.webView?.closeAllMediaPresentations()
+            await self.webView?.setCameraCaptureState(.none)
+            await self.webView?.setMicrophoneCaptureState(.none)
+            guard let url = URL(string: "https://bloombuddy.touchthegrass.de") else { return }
+            self.webView?.load( URLRequest(url: url))
+            self.cancellables.removeAll()
+            self.webView?.configuration.userContentController.removeAllUserScripts()
+            self.webView?.stopLoading()
+            self.webView?.removeFromSuperview()
+            
+            self.webView?.navigationDelegate = nil
+            self.webView?.uiDelegate = nil
+            self.webView = nil
         }
     }
     
@@ -200,9 +198,53 @@ class WebViewModel: NSObject, ObservableObject {
     }
     
     func appendHistory() {
+        typealias MeiliResult = Result<Searchable<HistoryEntry>, Swift.Error>
         if let container = appViewModel.modelContainer, let url = currentURL, cache != nil {
             if let blockedTime = historyBlocked[url], blockedTime > Date().timeIntervalSinceReferenceDate {
                 return
+            }
+            if let meili = appViewModel.meili {
+                let index = meili.index("history")
+                let param = SearchParameters(query: url., limit: 1, attributesToSearchOn: ["url"], filter: "url = '\(url.absoluteString)'")
+                index.search(param) { (result: MeiliResult) in
+                    switch result {
+                    case .success(let result):
+                        if let res = result.hits.first {
+                            let new = HistoryEntry(id: res.id, title: self.title ?? res.title, url: res.url, lastSeen: Int(Date.now.timeIntervalSinceReferenceDate), amount: res.amount + 1)
+                            Task {
+                                do {
+                                    _ = try await index.updateDocuments(documents: [new], primaryKey: "id")
+                                } catch {
+                                    print(error)
+                                }
+                            }
+                        } else {
+                            let new = HistoryEntry(id: UUID(), title: self.title ?? "", url: url.absoluteString, lastSeen: Int(Date.now.timeIntervalSinceReferenceDate), amount: 1)
+                            Task {
+                                do {
+                                    _ = try await index.addDocuments(documents: [new], primaryKey: "id")
+                                } catch {
+                                    print(error)
+                                }
+                            }
+                        }
+                    case .failure(let error):
+                        print(error.localizedDescription)
+                        if error.localizedDescription.contains("MeiliSearchApiError: Index `history` not found.") ||
+                            error.localizedDescription.contains("is not filterable. This index does not have configured filterable attributes."){
+                            Task {
+                                do {
+                                    try await meili.createIndex(uid: "history", primaryKey: "id")
+                                    try await meili.index("history").updateSearchableAttributes(["url", "title"])
+                                    try await meili.index("history").updateFilterableAttributes(["url", "title", "id", "lastSeen", "amount"])
+                                    try await meili.index("history").updateSortableAttributes(["lastSeen", "amount"])
+                                } catch {
+                                    print(error.localizedDescription)
+                                }
+                            }
+                        }
+                    }
+                }
             }
             let context = ModelContext(container)
             let rangeStart = Calendar.current.startOfDay(for: Date.now).timeIntervalSinceReferenceDate

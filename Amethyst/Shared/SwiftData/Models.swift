@@ -8,10 +8,91 @@ import Foundation
 import SwiftData
 import WebKit
 
-typealias SavedTab = SavedTabSchemaV0_1_5.SavedTab
-typealias BackForwardListItem = SavedTabSchemaV0_1_5.BackForwardListItem
-typealias HistoryItem = SavedTabSchemaV0_1_5.HistoryItem
-typealias HistoryDay = SavedTabSchemaV0_1_5.HistoryDay
+typealias SavedTab = ModelSchemaV0_1_6.SavedTab
+typealias BackForwardListItem = ModelSchemaV0_1_6.BackForwardListItem
+typealias HistoryItem = ModelSchemaV0_1_6.HistoryItem
+typealias HistoryDay = ModelSchemaV0_1_6.HistoryDay
+typealias FavouriteItem = ModelSchemaV0_1_6.FavouriteItem
+
+enum ModelSchemaV0_1_6: VersionedSchema {
+    static let versionIdentifier = Schema.Version(0, 1, 6)
+    static var models: [any PersistentModel.Type] {
+        [SavedTab.self, BackForwardListItem.self, HistoryItem.self, HistoryDay.self, FavouriteItem.self]
+    }
+    
+    @Model
+    final class SavedTab {
+        var id: UUID
+        var sortingID: Int
+        var url: URL?
+        var windowID: String
+        @Relationship(deleteRule: .cascade)
+        var backForwardList: [BackForwardListItem]
+        
+        init(id: UUID, sortingID: Int, url: URL?, windowID: String, backForwardList: [BackForwardListItem]) {
+            self.id = id
+            self.sortingID = sortingID
+            self.url = url
+            self.windowID = windowID
+            self.backForwardList = backForwardList
+        }
+    }
+    
+    @Model
+    final class BackForwardListItem {
+        var id: UUID
+        var sortingID: Int
+        var url: URL?
+        var title: String?
+        
+        init(id: UUID = UUID(), sortingID: Int, url: URL?, title: String?) {
+            self.id = id
+            self.sortingID = sortingID
+            self.url = url
+            self.title = title
+        }
+    }
+    
+    @Model
+    final class HistoryItem {
+        var id: UUID = UUID()
+        var time: Double
+        var url: URL
+        var title: String? = nil
+        
+        init(id: UUID = UUID(), time: Double, url: URL, title: String?) {
+            self.id = id
+            self.time = time
+            self.url = url
+            self.title = title
+        }
+    }
+    
+    @Model
+    final class HistoryDay: Identifiable {
+        var id: UUID = UUID()
+        var time: Double
+        var historyItems: [HistoryItem]
+        
+        init(time: Double, historyItems: [HistoryItem]) {
+            self.time = time
+            self.historyItems = historyItems
+        }
+    }
+    
+    @Model
+    final class FavouriteItem {
+        var id: UUID = UUID()
+        var url: URL
+        var title: String? = nil
+        
+        init(id: UUID = UUID(), url: URL, title: String?) {
+            self.id = id
+            self.url = url
+            self.title = title
+        }
+    }
+}
 
 enum SavedTabSchemaV0_1_5: VersionedSchema {
     static let versionIdentifier = Schema.Version(0, 1, 5)

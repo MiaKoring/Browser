@@ -62,7 +62,11 @@ extension ContentView: View, TabOpener {
                                 WebView(viewModel: tab.webViewModel)
                                     .clipShape(RoundedRectangle(cornerRadius: 5))
                                     .padding(10)
-                                    .opacity(tab.id == contentViewModel.currentTab ? 1 : 0)
+                                    .if(tab.id != contentViewModel.currentTab) { view in
+                                        view
+                                            .hidden()
+                                    }
+                                    //.opacity(tab.id == contentViewModel.currentTab ? 1 : 0)
                             }
                         }
                     }
@@ -138,6 +142,9 @@ extension ContentView: View, TabOpener {
             .onChange(of: contentViewModel.showHistory) {
                 showHistory = contentViewModel.showHistory
             }
+            .onChange(of: appViewModel.showMeiliSetup) {
+                showMeiliSetup = appViewModel.showMeiliSetup
+            }
         }
         .onDisappear {
             NotificationCenter.default.removeObserver(
@@ -158,6 +165,13 @@ extension ContentView: View, TabOpener {
         } content: {
             HistoryView()
                 .frame(width: 400, height: 500)
+        }
+        .sheet(isPresented: $showMeiliSetup) {
+            appViewModel.showMeiliSetup = false
+        } content: {
+            MeiliSetup()
+                .frame(width: 700, height: 400)
+                .interactiveDismissDisabled()
         }
     }
     

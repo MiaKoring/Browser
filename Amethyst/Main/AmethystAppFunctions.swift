@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import MeiliSearch
 
 extension AmethystApp {
     func createNewWindow() {
@@ -122,9 +123,15 @@ extension AmethystApp {
     
     func onAppear() {
         appViewModel.modelContainer = container
+        appViewModel.showMeiliSetup = !UDKey.wasMeiliSetupOnce.boolValue
         appDelegate.configure(appViewModel: appViewModel, contentViewModel: contentViewModel, contentViewModel2: contentViewModel2, contentViewModel3: contentViewModel3, container: container)
         appViewModel.openWindow = { url in
             openWindow(value: url)
+        }
+        do {
+            appViewModel.meili = try MeiliSearch(host: "http://localhost:7700", apiKey: KeyChainManager.getValue(for: .meiliMasterKey))
+        } catch {
+            print(error)
         }
         
         appViewModel.openMiniInNewTab = { url, id, newTab in

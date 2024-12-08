@@ -7,6 +7,7 @@
 import SwiftData
 import SwiftUI
 import WebKit
+import MeiliSearch
 
 @Observable
 class AppViewModel: NSObject, ObservableObject, NSWindowDelegate {
@@ -17,6 +18,8 @@ class AppViewModel: NSObject, ObservableObject, NSWindowDelegate {
     var openWindowByID: ((String) -> Void)? = nil
     var highlightedWindow: String = ""
     var modelContainer: ModelContainer? = nil
+    var showMeiliSetup = false
+    var meili: MeiliSearch?
     
     func windowDidBecomeKey(_ notification: Notification) {
         if let window = notification.object as? NSWindow {

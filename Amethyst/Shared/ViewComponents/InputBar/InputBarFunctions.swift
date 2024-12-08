@@ -5,26 +5,72 @@
 //  Created by Mia Koring on 02.12.24.
 //
 import Foundation
+import MeiliSearch
 
 extension InputBar {
     func timerSuggestionFetch() async {
-        async let searchEngineItems = await SearchEngine.duckduckgo.quickResults(text)
-        async let serverItems = await suggestionsFromServer(for: text)
-        
-        let results = await Array(searchEngineItems.prefix(5)).sorted(by: {
-            let a = $0.wholeMatch(of: Regexpr.urlWithoutProtocol.regex)
-            let b = $1.wholeMatch(of: Regexpr.urlWithoutProtocol.regex)
-            return a != nil && b == nil
-        }).map({
-            if let _ = $0.wholeMatch(of: Regexpr.urlWithoutProtocol.regex) {
-                SearchSuggestion(title: $0, urlString: "https://\($0)", origin: .searchEngine)
-            } else {
-                SearchSuggestion(title: $0, urlString: "https://duckduckgo.com/?q=\($0.replacingOccurrences(of: " ", with: "+"))", origin: .searchEngine)
+        if let meili = appViewModel.meili {
+            typealias MeiliResult = Result<Searchable<HistoryEntryResult>, Swift.Error>
+            async let searchEngineItems = await SearchEngine.duckduckgo.quickResults(text)
+            //async let serverItems = await suggestionsFromServer(for: text)
+            async let meiliItems: [SearchHit<HistoryEntryResult>]? = await withCheckedContinuation { continuation in
+                meili.index("history").search(SearchParameters(
+                    query: text,
+                    limit: 5,
+                    attributesToSearchOn: ["title", "url"],
+                    sort: ["amount:desc", "lastSeen:desc"],
+                    showRankingScore: true
+                )) { (result: MeiliResult) in
+                    switch result {
+                    case .success(let res):
+                        continuation.resume(returning: res.hits)
+                        print(res.hits)
+                    case .failure(let error):
+                        continuation.resume(returning: nil)
+                        print(error.localizedDescription)
+                    }
+                }
             }
-        })
-        let results1 = await serverItems
-        makeResult(serverList: results1, searchEngineList: results)
-        lastInput = text
+            
+            let results = await Array(searchEngineItems.prefix(5)).sorted(by: {
+                let a = $0.wholeMatch(of: Regexpr.urlWithoutProtocol.regex)
+                let b = $1.wholeMatch(of: Regexpr.urlWithoutProtocol.regex)
+                return a != nil && b == nil
+            }).map({
+                if let _ = $0.wholeMatch(of: Regexpr.urlWithoutProtocol.regex) {
+                    SearchSuggestion(title: $0, urlString: "https://\($0)", origin: .searchEngine)
+                } else {
+                    SearchSuggestion(title: $0, urlString: "https://duckduckgo.com/?q=\($0.replacingOccurrences(of: " ", with: "+"))", origin: .searchEngine)
+                }
+            })
+            //let results1 = await serverItems
+            let meiliRes: [SearchSuggestion]? = await meiliItems?.compactMap {
+                if $0._rankingScore ?? 0 > 0.6 {
+                    return SearchSuggestion(title: $0.title.isEmpty ? $0.url: $0.title, urlString: $0.url, origin: .history)
+                }
+                return nil
+            }
+            makeResult(serverList: []/*results1*/, searchEngineList: results, meiliList: meiliRes)
+            lastInput = text
+        } else {
+            async let searchEngineItems = await SearchEngine.duckduckgo.quickResults(text)
+            async let serverItems = await suggestionsFromServer(for: text)
+            
+            let results = await Array(searchEngineItems.prefix(5)).sorted(by: {
+                let a = $0.wholeMatch(of: Regexpr.urlWithoutProtocol.regex)
+                let b = $1.wholeMatch(of: Regexpr.urlWithoutProtocol.regex)
+                return a != nil && b == nil
+            }).map({
+                if let _ = $0.wholeMatch(of: Regexpr.urlWithoutProtocol.regex) {
+                    SearchSuggestion(title: $0, urlString: "https://\($0)", origin: .searchEngine)
+                } else {
+                    SearchSuggestion(title: $0, urlString: "https://duckduckgo.com/?q=\($0.replacingOccurrences(of: " ", with: "+"))", origin: .searchEngine)
+                }
+            })
+            let results1 = await serverItems
+            makeResult(serverList: results1, searchEngineList: results, meiliList: nil)
+            lastInput = text
+        }
     }
     
     func suggestionsFromServer(for input: String) async -> [SearchSuggestion] {
@@ -44,23 +90,31 @@ extension InputBar {
         })
     }
     
-    func makeResult(serverList: [SearchSuggestion], searchEngineList: [SearchSuggestion]) {
+    func makeResult(serverList: [SearchSuggestion], searchEngineList: [SearchSuggestion], meiliList: [SearchSuggestion]?) {
         var result: [SearchSuggestion] = []
-        if searchEngineList.count >= 3 && serverList.count >= 2 {
-            result.append(contentsOf: Array(serverList.prefix(2)))
-            result.append(contentsOf: Array(searchEngineList.prefix(3)))
-            quickSearchResults = result
-            return
+        if let meiliList {
+            if serverList.count + searchEngineList.count >= 2 {
+                result = Array(meiliList.prefix(3))
+            } else {
+                result = Array(meiliList.prefix(5 - serverList.count + searchEngineList.count))
+            }
         }
-        if searchEngineList.count < serverList.count {
-            result.append(contentsOf: Array(serverList.prefix(5 - searchEngineList.count)))
-            result.append(contentsOf: searchEngineList)
-            quickSearchResults = result
-            return
+        for i in 0..<serverList.count {
+            if result.count < 5 {
+                result.append(serverList[i])
+            } else {
+                quickSearchResults = result
+                return
+            }
         }
-        result.append(contentsOf: serverList)
-        result.append(contentsOf: Array(searchEngineList.prefix(5 - serverList.count)))
-        quickSearchResults = result
+        for i in 0..<searchEngineList.count {
+            if result.count < 5 {
+                result.append(searchEngineList[i])
+            } else {
+                quickSearchResults = result
+                return
+            }
+        }
     }
     
     func updateSelection(up: Bool = true) {

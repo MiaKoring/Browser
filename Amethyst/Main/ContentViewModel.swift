@@ -38,7 +38,9 @@ class ContentViewModel: NSObject, ObservableObject {
             currentTab = nil
         }
         withAnimation(.linear(duration: 0.2)) {
-            tabs[index].webViewModel.deinitialize()
+            Task {
+                await tabs[index].webViewModel.deinitialize()
+            }
             tabs.remove(at: index)
         }
     }
@@ -61,6 +63,7 @@ struct ContentView {
     @State var showRestoredHistory: Bool = false
     @Environment(\.scenePhase) var scenePhase
     @State var showHistory = false
+    @State var showMeiliSetup = false
     
     
     func onAppear() {
@@ -77,6 +80,7 @@ struct ContentView {
                 appViewModel.displayedWindows.insert(name)
             }
         }
+        showMeiliSetup = appViewModel.showMeiliSetup
         if contentViewModel.tabs.isEmpty {
             contentViewModel.isSidebarShown = true
         }
