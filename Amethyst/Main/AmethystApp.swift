@@ -122,6 +122,22 @@ struct AmethystApp: App {
                     showHistory()
                 }
                 .keyboardShortcut("y", modifiers: .command)
+                Button("testJS") {
+                    guard let contentViewModel = contentViewModel(for: appViewModel.currentlyActiveWindowId), let currentTab = contentViewModel.tabs.first(where: {$0.id == contentViewModel.currentTab}) else {
+                        print("couldn't find tab")
+                        return
+                    }
+                    Task {
+                        do {
+                            try await currentTab.webViewModel.webView?.evaluateJavaScript("""
+                
+""")
+                        } catch {
+                            print(error.localizedDescription)
+                        }
+                    }
+                }
+                .keyboardShortcut("o", modifiers: .command)
             }
         }
     }

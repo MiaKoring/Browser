@@ -40,7 +40,8 @@ struct MacOSButtons: View {
                     .font(.system(size: 12))
                     .foregroundColor(.green)
                     .onTapGesture {
-                        window.toggleFullScreen(nil)
+                        NSApp.keyWindow?.toggleFullScreen(nil)
+                        print(NSApp.keyWindow?.title)
                     }
             }
         }

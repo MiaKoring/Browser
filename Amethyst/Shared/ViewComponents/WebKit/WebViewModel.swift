@@ -197,6 +197,28 @@ class WebViewModel: NSObject, ObservableObject {
         appendHistory()
     }
     
+    func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: any Error) {
+        print(error.localizedDescription)
+        print("provisional Navigation")
+    }
+    
+    func webView(_ webView: WKWebView, decidePolicyFor navigationResponse: WKNavigationResponse, decisionHandler: @escaping (WKNavigationResponsePolicy) -> Void) {
+        if let response = navigationResponse.response as? HTTPURLResponse,
+           let mimeType = response.mimeType,
+           mimeType == "application/octet-stream" {
+            print("octet download")
+            decisionHandler(.cancel)
+            downloadBinary(from: navigationResponse.response.url, withName: navigationResponse.response.suggestedFilename)
+        } else {
+            decisionHandler(.allow)
+        }
+    }
+
+    func downloadBinary(from url: URL?, withName name: String?) {
+        guard let url = url else { return }
+        appViewModel.downloadManager.downloadFile(from: url, withName: name)
+    }
+    
     func appendHistory() {
         typealias MeiliResult = Result<Searchable<HistoryEntry>, Swift.Error>
         if let container = appViewModel.modelContainer, let url = currentURL, cache != nil {
@@ -313,4 +335,5 @@ class WebViewModel: NSObject, ObservableObject {
             .store(in: &cancellables)
     }
 }
+
 

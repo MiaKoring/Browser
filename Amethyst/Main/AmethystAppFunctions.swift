@@ -211,5 +211,6 @@ extension AmethystApp {
         }
         .windowToolbarStyle(.unifiedCompact(showsTitle: false))
         .windowStyle(.hiddenTitleBar)
+        .defaultAppStorage(UserDefaults.standard)
     }
 }

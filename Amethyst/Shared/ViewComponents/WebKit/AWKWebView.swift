@@ -15,8 +15,6 @@ class AWKWebView: WKWebView {
         
         var items = menu.items
         
-        
-        
         for idx in (0..<items.count).reversed() {
             if let id = items[idx].identifier?.rawValue {
                 if id == "WKMenuItemIdentifierOpenLinkInNewWindow" ||
@@ -51,27 +49,20 @@ class AWKWebView: WKWebView {
                     tabMenuItem.representedObject = items[idx]
                     items.insert(tabMenuItem, at: idx)
                     
-                    let newWindowTitle = "Open \(object) in new Window"
+                    let newWindowTitle = "Open \(object) in New Window"
                     let newWindowItem = NSMenuItem(title:newWindowTitle, action:action, keyEquivalent:"")
                     newWindowItem.identifier = NSUserInterfaceItemIdentifier("openInNewWindow")
                     newWindowItem.target = self
                     newWindowItem.representedObject = items[idx]
                     items.insert(newWindowItem, at: idx + 2)
                 
-                    /*
-                    let title2 = "Add \(object) to Bookmarks"
-                    let bookmarkMenuItem = NSMenuItem(title:title2, action:action, keyEquivalent:"")
-                    bookmarkMenuItem.identifier = NSUserInterfaceItemIdentifier("addToBookmarks")
-                    bookmarkMenuItem.target = self
-                    bookmarkMenuItem.representedObject = items[idx]
-                    items.insert(bookmarkMenuItem, at: idx+2)*/
                 }
             }
         }
         
         for idx in (0..<items.count).reversed() {
           if let id = items[idx].identifier?.rawValue {
-            if id == "WKMenuItemIdentifierOpenLinkInNewWindow"  {
+            if id == "WKMenuItemIdentifierOpenLinkInNewWindow" {
               items.remove(at:idx)
             }
           }
