@@ -44,6 +44,7 @@ class WebViewModel: NSObject, ObservableObject {
         webConfiguration.processPool = processPool
         webConfiguration.preferences.javaScriptCanOpenWindowsAutomatically = true
         webConfiguration.websiteDataStore = WKWebsiteDataStore.default()
+        webConfiguration.preferences.isElementFullscreenEnabled = true
         self.webView = AWKWebView(frame: .zero, configuration: webConfiguration)
         self.webView?.allowsBackForwardNavigationGestures = false
         self.webView?.underPageBackgroundColor = .myPurple
@@ -70,6 +71,7 @@ class WebViewModel: NSObject, ObservableObject {
         webConfiguration.processPool = processPool
         webConfiguration.preferences.javaScriptCanOpenWindowsAutomatically = true
         webConfiguration.websiteDataStore = WKWebsiteDataStore.default()
+        webConfiguration.preferences.isElementFullscreenEnabled = true
         self.webView = AWKWebView(frame: .zero, configuration: webConfiguration)
         self.webView?.allowsBackForwardNavigationGestures = false
         self.webView?.underPageBackgroundColor = .myPurple
@@ -95,6 +97,7 @@ class WebViewModel: NSObject, ObservableObject {
         webConfiguration.processPool = processPool
         webConfiguration.preferences.javaScriptCanOpenWindowsAutomatically = true
         webConfiguration.websiteDataStore = WKWebsiteDataStore.default()
+        webConfiguration.preferences.isElementFullscreenEnabled = true
         self.webView = AWKWebView(frame: .zero, configuration: webConfiguration)
         self.webView?.allowsBackForwardNavigationGestures = false
         self.webView?.underPageBackgroundColor = .myPurple
