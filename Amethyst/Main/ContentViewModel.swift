@@ -99,5 +99,6 @@ struct ContentView {
             print("failed to fetch saved tabs")
         }
     }
+
 }
 

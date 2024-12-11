@@ -62,7 +62,7 @@ class AWKWebView: WKWebView {
         
         for idx in (0..<items.count).reversed() {
           if let id = items[idx].identifier?.rawValue {
-            if id == "WKMenuItemIdentifierOpenLinkInNewWindow" {
+              if id == "WKMenuItemIdentifierOpenLinkInNewWindow" || id.contains("Download") {
               items.remove(at:idx)
             }
           }

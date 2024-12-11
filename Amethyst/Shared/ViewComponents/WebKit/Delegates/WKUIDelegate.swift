@@ -40,6 +40,21 @@ extension WebViewModel: WKUIDelegate {
         contentViewModel.handleClose()
     }
     
+    func webView(_ webView: WKWebView, runOpenPanelWith parameters: WKOpenPanelParameters, initiatedByFrame frame: WKFrameInfo) async -> [URL]? {
+        let openPanel = NSOpenPanel()
+        openPanel.canChooseFiles = true
+        openPanel.canChooseDirectories = false
+        openPanel.allowsMultipleSelection = parameters.allowsMultipleSelection
+        
+        let response = await openPanel.begin()
+9
+        if response == .OK {
+            return openPanel.urls
+        } else {
+            return nil
+        }
+    }
+    
     func openInNewTab(configuration: WKWebViewConfiguration) -> WKWebView? {
         let newWebViewModel = WebViewModel(config: configuration, processPool: self.processPool, contentViewModel: contentViewModel, appViewModel: appViewModel)
         let newTab = ATab(webViewModel: newWebViewModel, restoredURLs: [])
@@ -51,4 +66,6 @@ extension WebViewModel: WKUIDelegate {
         contentViewModel.currentTab = newTab.id
         return newWebViewModel.webView
     }
+    
+
 }

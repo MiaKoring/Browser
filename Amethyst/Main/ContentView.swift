@@ -66,7 +66,13 @@ extension ContentView: View, TabOpener {
                                         view
                                             .hidden()
                                     }
-                                    //.opacity(tab.id == contentViewModel.currentTab ? 1 : 0)
+                                    .opacity(tab.id == contentViewModel.currentTab ? 1 : 0)
+                                    .if(tab.id == contentViewModel.currentTab) { view in
+                                        view
+                                            .overlay(alignment: .bottomTrailing) {
+                                                DownloadButton(webViewModel: tab.webViewModel)
+                                            }
+                                    }
                             }
                         }
                     }
