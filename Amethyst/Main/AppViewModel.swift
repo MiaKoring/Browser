@@ -21,6 +21,7 @@ class AppViewModel: NSObject, ObservableObject, NSWindowDelegate {
     var showMeiliSetup = false
     var meili: MeiliSearch?
     var downloadManager = DownloadManager()
+    var shouldSkipMeiliNotification: Bool = false
     
     func windowDidBecomeKey(_ notification: Notification) {
         if let window = notification.object as? NSWindow {

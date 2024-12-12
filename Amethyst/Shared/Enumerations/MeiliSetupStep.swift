@@ -22,6 +22,14 @@ extension MeiliSetupStep: Identifiable {
     var id: Int {
         self.rawValue
     }
+    
+    var next: MeiliSetupStep {
+        MeiliSetupStep(rawValue: self.rawValue + 1) ?? .checkMeiliRunning
+    }
+     
+    var previous: MeiliSetupStep {
+        MeiliSetupStep(rawValue: self.rawValue - 1) ?? .whatIs
+    }
 }
 
 extension MeiliSetupStep {
@@ -47,7 +55,7 @@ extension MeiliSetupStep {
             VStack {
                 Text("Install Meilisearch")
                     .font(.title)
-                Text("To install Meilisearch paste the command below in the Terminal at a destination you like. You will need to know the path where Meilisearch is located.")
+                Text("To install Meilisearch paste and execute the command below in the Terminal at a destination you like. Do NOT run it afterwards like it will tell you. Just ignore it. Remember the path where Meilisearch is located.")
                     .padding(.horizontal, 30)
                     .multilineTextAlignment(.center)
                     .padding(.top, 10)
@@ -67,7 +75,7 @@ extension MeiliSetupStep {
                 }
                 .buttonStyle(.borderless)
                 Button {
-                    let automatorPath = "/System/Applications/Terminal.app"
+                    let automatorPath = "/System/Applications/Utilities/Terminal.app"
                     NSWorkspace.shared.open(URL(fileURLWithPath: automatorPath))
                 } label: {
                     Text("Open Terminal")
@@ -102,7 +110,7 @@ extension MeiliSetupStep {
                         }
                         let content =
 """
-cd "Path-to-meilisearch-folder"
+cd "Absolute-Path-to-meilisearch-folder"
 ./meilisearch --master-key="\(key)" &
 disown
 """
@@ -134,7 +142,7 @@ disown
                     .scaledToFit()
                     .shadow(color: .myPurple, radius: 10)
                     .padding(.horizontal, 30)
-                Text("Now search for \"run\" and drag \"Run Shell Script\" to the right. Then replace \"cat\" in the textfield with the contents you copied before. Replace \"Path-to-meilisearch-folder\" with the path to where you installed meilisearch. Run the script once, by clicking the button in the top-right. Now you're ready. Save the application, make sure to choose File Format \"Application\"")
+                Text("Now search for \"run\" and drag \"Run Shell Script\" to the right. Then replace \"cat\" in the textfield with the contents you copied before. Replace \"Absolute-Path-to-meilisearch-folder\" with the path to where you installed meilisearch. Make sure to use the absolute path. \nRight: /Users/miakoring/Documents/Meili | Wrong: ~/Documents/Meili. \nRun the script once, by clicking the button in the top-right. Now you're ready. Save the application, make sure to choose File Format \"Application\"")
                     .padding(.horizontal, 30)
                     .multilineTextAlignment(.center)
                     .padding(.top, 10)
