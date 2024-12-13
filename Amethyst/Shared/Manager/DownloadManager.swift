@@ -29,14 +29,12 @@ class DownloadManager: NSObject, URLSessionDownloadDelegate {
     func downloadFile(from url: URL, withName name: String?) {
         let downloadTask = session.downloadTask(with: url)
         
-        // Downloads-Ordner
         let downloadsDirectory = FileManager.default.urls(for: .downloadsDirectory, in: .userDomainMask).first!
         
         let filename = url.lastPathComponent
         let targetURL: URL = downloadsDirectory.appendingPathComponent(name ?? filename)
         let downloadSidecarURL = targetURL.appendingPathExtension("download")
 
-        // Download-Info tracken
         activeDownloads[downloadTask] = DownloadInfo(
             originalURL: url,
             targetURL: targetURL,
@@ -58,19 +56,28 @@ class DownloadManager: NSObject, URLSessionDownloadDelegate {
         activeDownloads[task] = downloadInfo
     }
     
-    // Download-Delegate Methoden
     func urlSession(_ session: URLSession, downloadTask: URLSessionDownloadTask, didFinishDownloadingTo location: URL) {
         guard let downloadInfo = activeDownloads[downloadTask] else { return }
         
         do {
-            // Temporäre Datei an Zielort verschieben
-            try FileManager.default.moveItem(at: location, to: downloadInfo.targetURL)
+            var targetURL = downloadInfo.targetURL
+            var suffix = 0
             
-            // .download Sidecar entfernen
+            while FileManager.default.fileExists(atPath: targetURL.path) {
+                suffix += 1
+                let fileExtension = targetURL.pathExtension
+                let fileNameWithoutExtension = targetURL.deletingPathExtension().lastPathComponent
+                
+                targetURL = downloadInfo.targetURL
+                    .deletingLastPathComponent()
+                    .appendingPathComponent("\(fileNameWithoutExtension.replacing(/\(\d*\)/, with: ""))(\(suffix))")
+                    .appendingPathExtension(fileExtension)
+            }
+            try FileManager.default.moveItem(at: location, to: targetURL)
+            
             try? FileManager.default.removeItem(at: downloadInfo.downloadURL)
             
             
-            // Download aus Tracking entfernen
             activeDownloads.removeValue(forKey: downloadTask)
         } catch {
             print("Download-Fehler: \(error.localizedDescription)")
@@ -82,7 +89,6 @@ class DownloadManager: NSObject, URLSessionDownloadDelegate {
                 
         let downloadsDirectory = FileManager.default.urls(for: .downloadsDirectory, in: .userDomainMask).first!
         let filename = originalURL.lastPathComponent
-        let downloadURL = downloadsDirectory.appendingPathComponent(filename).appendingPathExtension("download")
         
         let progress = Double(totalBytesWritten) / Double(totalBytesExpectedToWrite)
         
