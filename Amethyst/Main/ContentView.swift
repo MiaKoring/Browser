@@ -67,6 +67,7 @@ extension ContentView: View, TabOpener {
                                             .hidden()
                                     }
                                     .opacity(tab.id == contentViewModel.currentTab ? 1 : 0)
+                                    .allowsHitTesting(tab.id == contentViewModel.currentTab)
                                     .if(tab.id == contentViewModel.currentTab) { view in
                                         view
                                             .overlay(alignment: .bottomTrailing) {
@@ -178,6 +179,9 @@ extension ContentView: View, TabOpener {
             MeiliSetup()
                 .frame(width: 700, height: 400)
                 .interactiveDismissDisabled()
+        }
+        .onChange(of: appViewModel.currentlyActiveWindowId) {
+            print(appViewModel.currentlyActiveWindowId)
         }
     }
     

@@ -7,9 +7,15 @@
 
 import Foundation
 
-protocol UserDefaultWrapper: RawRepresentable where RawValue == String {
+protocol UserDefaultWrapper: CaseIterable, RawRepresentable where RawValue == String  {
 }
 extension UserDefaultWrapper {
+    static func reset() {
+        for setting in self.allCases {
+            UserDefaults.standard.removeObject(forKey: setting.key)
+        }
+    }
+    
     var key: String {
         switch self {
         default: self.rawValue
@@ -33,6 +39,11 @@ extension UserDefaultWrapper {
 
     var boolValue: Bool {
         get { UserDefaults.standard.bool(forKey: self.key) }
+        nonmutating set { UserDefaults.standard.setValue(newValue, forKey: self.key) }
+    }
+    
+    var data: Data? {
+        get { UserDefaults.standard.data(forKey: self.key) }
         nonmutating set { UserDefaults.standard.setValue(newValue, forKey: self.key) }
     }
 

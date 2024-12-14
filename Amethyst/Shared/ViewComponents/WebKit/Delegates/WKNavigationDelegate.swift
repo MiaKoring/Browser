@@ -9,7 +9,7 @@ import WebKit
 
 extension WebViewModel: WKNavigationDelegate {
     func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction) async -> WKNavigationActionPolicy {
-        if let _ = navigationAction.request.url, contentViewModel.isLoaded {
+        if let url = navigationAction.request.url, contentViewModel.isLoaded {
             switch navigationAction.navigationType {
             case .reload, .backForward, .formResubmitted, .formSubmitted:
                 cache = nil
@@ -22,6 +22,7 @@ extension WebViewModel: WKNavigationDelegate {
                 cache = nil
                 break
             }
+            print(url.absoluteString)
         }
         if navigationAction.shouldPerformDownload {
             return .download

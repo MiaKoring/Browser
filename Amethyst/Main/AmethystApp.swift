@@ -54,91 +54,81 @@ struct AmethystApp: App {
             CommandGroup(replacing: .newItem) {
                 Button("New Window") {
                     createNewWindow()
-                }.keyboardShortcut("N", modifiers: [.command])
+                }
+                .keyboardShortcut(UDKey.newWindowShortcut.shortcut.key , modifiers: UDKey.newWindowShortcut.shortcut.modifier)
             }
             CommandGroup(after: .sidebar) {
                 Button("Toggle Sidebar") {
                     toggleSidebar()
                 }
-                .keyboardShortcut("e", modifiers: .command)
+                .keyboardShortcut(UDKey.toggleSidebarShortcut.shortcut.key, modifiers: UDKey.toggleSidebarShortcut.shortcut.modifier)
                 Button("Fix Sidebar") {
                     toggleSidebar(fix: true)
                 }
-                .keyboardShortcut("e", modifiers: [.command, .shift])
+                .keyboardShortcut(UDKey.toggleSidebarFixedShortcut.shortcut.key, modifiers: UDKey.toggleSidebarFixedShortcut.shortcut.modifier)
             }
             CommandMenu("Find") {
                 Button("Open Searchbar") {
                     newTab()
                 }
-                .keyboardShortcut("t", modifiers: .command)
-                Button("Inline Search") {
+                .keyboardShortcut(UDKey.openSearchbarShortcut.shortcut.key, modifiers: UDKey.openSearchbarShortcut.shortcut.modifier)
+                Button("Document Search") {
                     search()
                 }
-                .keyboardShortcut("f", modifiers: .command)
+                .keyboardShortcut(UDKey.openInlineSearchShortcut.shortcut.key, modifiers: UDKey.openInlineSearchShortcut.shortcut.modifier)
                 .disabled(!appViewModel.currentlyActiveWindowId.hasPrefix("window"))
             }
             CommandMenu("Navigation") {
                 Button("Go Back") {
                     navigate()
                 }
-                .keyboardShortcut("Ö", modifiers: .command)
+                .keyboardShortcut(UDKey.goBackShortcut.shortcut.key, modifiers: UDKey.goBackShortcut.shortcut.modifier)
                 Button("Go Forward") {
                     navigate(back: false)
                 }
-                .keyboardShortcut("Ä", modifiers: .command)
+                .keyboardShortcut(UDKey.goForwardShortcut.shortcut.key, modifiers: UDKey.goForwardShortcut.shortcut.modifier)
                 Button("Reload") {
                     reload()
                 }
-                .keyboardShortcut("r", modifiers: .command)
+                .keyboardShortcut(UDKey.reloadShortcut.shortcut.key, modifiers: UDKey.reloadShortcut.shortcut.modifier)
                 .disabled(reloadDisabled())
                 Button("Reload from source") {
                     reload(fromSource: true)
                 }
-                .keyboardShortcut("r", modifiers: [.command, .shift])
+                .keyboardShortcut(UDKey.reloadFromSourceShortcut.shortcut.key, modifiers: UDKey.reloadFromSourceShortcut.shortcut.modifier)
                 .disabled(reloadDisabled())
                 Button("Previous Tab") {
                     navigateTabs()
                 }
-                .keyboardShortcut("w", modifiers: [.command, .shift])
+                .keyboardShortcut(UDKey.previousTabShortcut.shortcut.key, modifiers: UDKey.previousTabShortcut.shortcut.modifier)
                 .disabled(tabSwitchingDisabled())
                 Button("Next Tab") {
                     navigateTabs(back: false)
                 }
-                .keyboardShortcut("s", modifiers: [.command, .shift])
+                .keyboardShortcut(UDKey.nextTabShortcut.shortcut.key, modifiers: UDKey.nextTabShortcut.shortcut.modifier)
                 .disabled(tabSwitchingDisabled(back: false))
                 Button("Close current Tab") {
                     closeCurrentTab()
                 }
-                .keyboardShortcut("c", modifiers: .option)
+                .keyboardShortcut(UDKey.closeCurrentTabShortcut.shortcut.key, modifiers: UDKey.closeCurrentTabShortcut.shortcut.modifier)
                 .disabled(contentViewModel(for: appViewModel.currentlyActiveWindowId)?.currentTab == nil)
-                Button("Show Restored Tabhistory") {
-                    openTabHistory()
-                }
-                .keyboardShortcut("t", modifiers: [.shift, .command])
-                .disabled(isTabHistoryDisabled())
             }
             CommandMenu("Archive") {
                 Button("Show History") {
                     showHistory()
                 }
-                .keyboardShortcut("y", modifiers: .command)
-                Button("testJS") {
-                    guard let contentViewModel = contentViewModel(for: appViewModel.currentlyActiveWindowId), let currentTab = contentViewModel.tabs.first(where: {$0.id == contentViewModel.currentTab}) else {
-                        print("couldn't find tab")
-                        return
-                    }
-                    Task {
-                        do {
-                            try await currentTab.webViewModel.webView?.evaluateJavaScript("""
-                
-""")
-                        } catch {
-                            print(error.localizedDescription)
-                        }
-                    }
+                .keyboardShortcut(UDKey.showHistoryShortcut.shortcut.key, modifiers: UDKey.showHistoryShortcut.shortcut.modifier)
+                Button("Show Restored Tabhistory") {
+                    openTabHistory()
                 }
-                .keyboardShortcut("o", modifiers: .command)
+                .keyboardShortcut(UDKey.showRestoredTabhistoryShortcut.shortcut.key, modifiers: UDKey.showRestoredTabhistoryShortcut.shortcut.modifier)
+                .disabled(isTabHistoryDisabled())
             }
+        }
+        Settings {
+            SettingsView()
+                .frame(width: 900, height: 500)
+                .environment(appViewModel)
         }
     }
 }
