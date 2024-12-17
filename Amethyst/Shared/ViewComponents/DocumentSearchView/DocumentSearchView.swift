@@ -123,7 +123,7 @@ struct DocumentSearchView: View {
     @Previewable @State var appViewModel = AppViewModel()
     ZStack {
         if let tab = contentViewModel.tabs.first {
-            WebView(viewModel: tab.webViewModel)
+            WebView(tabID: tab.id, webViewModel: tab.webViewModel)
         }
         VStack {
             HStack {

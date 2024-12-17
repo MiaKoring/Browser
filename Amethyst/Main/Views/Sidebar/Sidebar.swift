@@ -14,27 +14,29 @@ extension Sidebar: View {
                     .padding(.trailing)
                     .padding(.leading, 5)
                 Image(systemName: "sidebar.left")
-                    .font(.title2)
-                    .foregroundStyle(.gray)
-                    .padding(3)
-                    .background() {
-                        if !isSideBarButtonHovered {
-                            Color.clear
-                        } else {
-                            Color.white.opacity(0.1)
-                        }
-                    }
-                    .clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
-                    .onHover { hovering in
-                        withAnimation(.linear(duration: 0.07)) {
-                            isSideBarButtonHovered = hovering
-                        }
-                    }
-                    .onTapGesture {
+                    .sidebarTopButton(hovered: $isSideBarButtonHovered) {
                         contentViewModel.isSidebarFixed.toggle()
                         contentViewModel.isSidebarShown = false
                     }
                 Spacer()
+                Image(systemName: "chevron.left")
+                    .sidebarTopButton(hovered: $isBackHovered) {
+                        if let tab = contentViewModel.tabs.first(where: {$0.id == contentViewModel.currentTab}) {
+                            tab.webViewModel.webView?.goBack()
+                        }
+                    }
+                Image(systemName: "chevron.right")
+                    .sidebarTopButton(hovered: $isForwardHovered) {
+                        if let tab = contentViewModel.tabs.first(where: {$0.id == contentViewModel.currentTab}) {
+                            tab.webViewModel.webView?.goForward()
+                        }
+                    }
+                Image(systemName: "arrow.trianglehead.counterclockwise.rotate.90")
+                    .sidebarTopButton(hovered: $isReloadHovered) {
+                        if let tab = contentViewModel.tabs.first(where: {$0.id == contentViewModel.currentTab}) {
+                            tab.webViewModel.webView?.reload()
+                        }
+                    }
             }
             .padding(.leading, contentViewModel.isSidebarFixed ? 5: 0)
             .padding(.top, contentViewModel.isSidebarFixed ? 5: 0)
@@ -82,6 +84,19 @@ extension Sidebar: View {
             
             ATabView()
                 .padding(-15)
+            if(!AppViewModel.isDefaultBrowser()) {
+                Button("Set as default Browser") {
+                    Task {
+                        do {
+                            try? await NSWorkspace.shared.setDefaultApplication(at: Bundle.main.bundleURL, toOpenURLsWithScheme: "http")
+                        } catch {
+                            print(error)
+                        }
+                    }
+                }
+                .buttonStyle(.borderless)
+                .padding(.bottom, 10)
+            }
         }
         .frame(maxHeight: .infinity)
         .frame(maxWidth: contentViewModel.isSidebarFixed ? .infinity: 300)

@@ -59,21 +59,7 @@ extension ContentView: View, TabOpener {
                         }
                         ZStack {
                             ForEach(contentViewModel.tabs, id: \.self) { tab in
-                                WebView(viewModel: tab.webViewModel)
-                                    .clipShape(RoundedRectangle(cornerRadius: 5))
-                                    .padding(10)
-                                    .if(tab.id != contentViewModel.currentTab) { view in
-                                        view
-                                            .hidden()
-                                    }
-                                    .opacity(tab.id == contentViewModel.currentTab ? 1 : 0)
-                                    .allowsHitTesting(tab.id == contentViewModel.currentTab)
-                                    .if(tab.id == contentViewModel.currentTab) { view in
-                                        view
-                                            .overlay(alignment: .bottomTrailing) {
-                                                DownloadButton(webViewModel: tab.webViewModel)
-                                            }
-                                    }
+                                WebView(tabID: tab.id, webViewModel: tab.webViewModel)
                             }
                         }
                     }

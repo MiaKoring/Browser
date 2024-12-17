@@ -11,4 +11,7 @@ struct Sidebar {
     @Environment(AppViewModel.self) var appViewModel
     @State var isSideBarButtonHovered: Bool = false
     @State var isNewTabHovered: Bool = false
+    @State var isBackHovered: Bool = false
+    @State var isForwardHovered: Bool = false
+    @State var isReloadHovered: Bool = false
 }

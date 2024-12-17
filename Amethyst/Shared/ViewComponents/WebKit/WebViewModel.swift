@@ -18,6 +18,7 @@ class WebViewModel: NSObject, ObservableObject {
     @Published var title: String? = nil
     @Published var isUsingCamera: WKMediaCaptureState = .none
     @Published var isUsingMicrophone: WKMediaCaptureState = .none
+    @Published var error: (any Error)? = nil
     @ObservedObject var contentViewModel: ContentViewModel
     @ObservedObject var appViewModel: AppViewModel
     
@@ -105,7 +106,6 @@ class WebViewModel: NSObject, ObservableObject {
         webConfiguration.mediaTypesRequiringUserActionForPlayback = []
         webConfiguration.suppressesIncrementalRendering = false
         webConfiguration.processPool = processPool
-        webConfiguration.preferences.javaScriptCanOpenWindowsAutomatically = true
         webConfiguration.websiteDataStore = WKWebsiteDataStore.default()
         webConfiguration.preferences.isElementFullscreenEnabled = true
         webConfiguration.upgradeKnownHostsToHTTPS = true
@@ -214,27 +214,6 @@ class WebViewModel: NSObject, ObservableObject {
     func webView(_ webView: WKWebView, navigationResponse: WKNavigationResponse, didBecome download: WKDownload) {
         download.delegate = downloadDelegate
     }
-    
-    func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
-        appendHistory()
-    }
-    
-    func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: any Error) {
-        print(error.localizedDescription)
-        print("provisional Navigation")
-    }
-    
-    func webView(_ webView: WKWebView, decidePolicyFor navigationResponse: WKNavigationResponse, decisionHandler: @escaping (WKNavigationResponsePolicy) -> Void) {
-        if let response = navigationResponse.response as? HTTPURLResponse,
-           let mimeType = response.mimeType,
-           mimeType == "application/octet-stream" {
-            print("octet download")
-            decisionHandler(.cancel)
-            downloadBinary(from: navigationResponse.response.url, withName: navigationResponse.response.suggestedFilename)
-        } else {
-            decisionHandler(.allow)
-        }
-    }
 
     func downloadBinary(from url: URL?, withName name: String?) {
         guard let url = url else { return }
@@ -324,7 +303,9 @@ class WebViewModel: NSObject, ObservableObject {
         webView?.publisher(for: \.url)
             .receive(on: DispatchQueue.main)
             .sink { [weak self] value in
-                self?.currentURL = value
+                if let value {
+                    self?.currentURL = value
+                }
             }
             .store(in: &cancellables)
 
@@ -356,6 +337,35 @@ class WebViewModel: NSObject, ObservableObject {
             }
             .store(in: &cancellables)
     }
+    
+    func enablePictureInPicture() {
+        let script = """
+        (function() {
+            var video = document.querySelector('video');
+            if (video) {
+                if (document.pictureInPictureElement) {
+                    document.exitPictureInPicture();
+                } else if (video.requestPictureInPicture) {
+                    video.requestPictureInPicture().catch(function(error) {
+                        console.error('PiP Error:', error);
+                    });
+                } else {
+                    console.log('PiP not supported');
+                }
+            } else {
+                console.log('No video found');
+            }
+            return true;
+        })();
+        """
+        
+        webView?.evaluateJavaScript(script) { (result, error) in
+            if let error = error {
+                print("JavaScript Execution Error: \(error.localizedDescription)")
+            }
+            if let result = result {
+                print("PiP Script Result: \(result)")
+            }
+        }
+    }
 }
-
-

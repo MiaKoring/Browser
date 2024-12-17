@@ -29,5 +29,12 @@ class AppViewModel: NSObject, ObservableObject, NSWindowDelegate {
                 currentlyActiveWindowId = id
             }
         }
-      }
+    }
+    
+    static func isDefaultBrowser() -> Bool {
+        guard let url = URL(string: "https://amethyst.miakoring.de"), let appURL = NSWorkspace.shared.urlForApplication(toOpen: url) else { return false }
+        
+        
+        return appURL.absoluteString.contains("Amethyst%20Browser.app")
+    }
 }

@@ -123,6 +123,11 @@ struct AmethystApp: App {
                 }
                 .keyboardShortcut(UDKey.showRestoredTabhistoryShortcut.shortcut.key, modifiers: UDKey.showRestoredTabhistoryShortcut.shortcut.modifier)
                 .disabled(isTabHistoryDisabled())
+                Button("pip") {
+                    guard let contentViewModel = contentViewModel(for: appViewModel.currentlyActiveWindowId), let tab = contentViewModel.tabs.first(where: {$0.id == contentViewModel.currentTab}) else { return }
+                    tab.webViewModel.enablePictureInPicture()
+                }
+                .keyboardShortcut("p", modifiers: .command)
             }
         }
         Settings {
