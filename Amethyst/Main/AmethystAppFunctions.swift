@@ -208,9 +208,110 @@ extension AmethystApp {
                 }
                 .environment(appViewModel)
                 .environment(viewModel)
+                .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
+                    print("registered")
+                    NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
+                        return handleAndPassCommand(event)
+                    }
+                }
         }
         .windowToolbarStyle(.unifiedCompact(showsTitle: false))
         .windowStyle(.hiddenTitleBar)
         .defaultAppStorage(UserDefaults.standard)
     }
+    
+    func handleAndPassCommand(_ event: NSEvent) -> NSEvent? {
+        if event.modifierFlags.rawValue == 256 || ((event.modifierFlags.contains(.shift) || event.modifierFlags.contains(.capsLock)) && (!event.modifierFlags.contains(.command) && !event.modifierFlags.contains(.control) && !event.modifierFlags.contains(.option))) { return event }
+        
+        //go back
+        if expectedShortcutMatchesEvent(expected: KeyboardShortcut(UDKey.goBackShortcut.shortcut.key, modifiers: UDKey.goBackShortcut.shortcut.modifier), event: event) {
+            navigate()
+            return nil
+        }
+        
+        //go forward
+        if expectedShortcutMatchesEvent(expected: KeyboardShortcut(UDKey.goForwardShortcut.shortcut.key, modifiers: UDKey.goForwardShortcut.shortcut.modifier), event: event) {
+            navigate(back: false)
+            return nil
+        }
+        
+        //reload
+        if expectedShortcutMatchesEvent(expected: KeyboardShortcut(UDKey.reloadShortcut.shortcut.key, modifiers: UDKey.reloadShortcut.shortcut.modifier), event: event) {
+            reload()
+            return nil
+        }
+        
+        // previous tab
+        if expectedShortcutMatchesEvent(expected: KeyboardShortcut(UDKey.previousTabShortcut.shortcut.key, modifiers: UDKey.previousTabShortcut.shortcut.modifier), event: event) {
+            navigateTabs()
+            return nil
+        }
+        
+        // next tab
+        if expectedShortcutMatchesEvent(expected: KeyboardShortcut(UDKey.nextTabShortcut.shortcut.key, modifiers: UDKey.nextTabShortcut.shortcut.modifier), event: event) {
+            navigateTabs(back: false)
+            return nil
+        }
+        
+        // reload from source
+        if expectedShortcutMatchesEvent(expected: KeyboardShortcut(UDKey.reloadFromSourceShortcut.shortcut.key, modifiers: UDKey.reloadFromSourceShortcut.shortcut.modifier), event: event) {
+            reload(fromSource: true)
+            return nil
+        }
+        
+        //searchbar
+        if expectedShortcutMatchesEvent(expected: KeyboardShortcut(UDKey.openSearchbarShortcut.shortcut.key, modifiers: UDKey.openSearchbarShortcut.shortcut.modifier), event: event) {
+            newTab()
+            return nil
+        }
+        
+        // close current tab
+        if expectedShortcutMatchesEvent(expected: KeyboardShortcut(UDKey.closeCurrentTabShortcut.shortcut.key, modifiers: UDKey.closeCurrentTabShortcut.shortcut.modifier), event: event) {
+            closeCurrentTab()
+            return nil
+        }
+        
+        //toggle sidebar
+        if expectedShortcutMatchesEvent(expected: KeyboardShortcut(UDKey.toggleSidebarShortcut.shortcut.key, modifiers: UDKey.toggleSidebarShortcut.shortcut.modifier), event: event) {
+            toggleSidebar()
+            return nil
+        }
+        
+        //document search
+        if expectedShortcutMatchesEvent(expected: KeyboardShortcut(UDKey.openInlineSearchShortcut.shortcut.key, modifiers: UDKey.openInlineSearchShortcut.shortcut.modifier), event: event) {
+            
+            search()
+            return nil
+        }
+        
+        //toggle sidebar fixed
+        if expectedShortcutMatchesEvent(expected: KeyboardShortcut(UDKey.toggleSidebarFixedShortcut.shortcut.key, modifiers: UDKey.toggleSidebarFixedShortcut.shortcut.modifier), event: event) {
+            toggleSidebar(fix: true)
+            return nil
+        }
+        
+        //new window
+        if expectedShortcutMatchesEvent(expected: KeyboardShortcut(UDKey.newWindowShortcut.shortcut.key, modifiers: UDKey.newWindowShortcut.shortcut.modifier), event: event) {
+            createNewWindow()
+            return nil
+        }
+        
+        //show history
+        if expectedShortcutMatchesEvent(expected: KeyboardShortcut(UDKey.showHistoryShortcut.shortcut.key, modifiers: UDKey.showHistoryShortcut.shortcut.modifier), event: event) {
+            showHistory()
+            return nil
+        }
+        //show tab history
+        if expectedShortcutMatchesEvent(expected: KeyboardShortcut(UDKey.showRestoredTabhistoryShortcut.shortcut.key, modifiers: UDKey.showRestoredTabhistoryShortcut.shortcut.modifier), event: event) {
+            openTabHistory()
+            return nil
+        }
+        return event
+    }
+    
+    func expectedShortcutMatchesEvent(expected: KeyboardShortcut, event: NSEvent) -> Bool {
+        return event.characters?.first?.lowercased() == expected.key.character.lowercased() &&
+        (event.modifierFlags.contains(.control) == expected.modifiers.contains(.control)) && (event.modifierFlags.contains(.command) == expected.modifiers.contains(.command)) && (event.modifierFlags.contains(.shift) == expected.modifiers.contains(.shift)) && (event.modifierFlags.contains(.capsLock) == expected.modifiers.contains(.capsLock)) && (event.modifierFlags.contains(.option) == expected.modifiers.contains(.option))
+    }
 }
+

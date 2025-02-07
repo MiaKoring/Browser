@@ -44,6 +44,11 @@ struct AmethystApp: App {
                         onAppear()
                     }
                     .ignoresSafeArea()
+                    .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
+                        NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
+                            return handleAndPassCommand(event)
+                        }
+                    }
             }
         }
         .windowToolbarStyle(.unifiedCompact(showsTitle: false))
@@ -123,11 +128,6 @@ struct AmethystApp: App {
                 }
                 .keyboardShortcut(UDKey.showRestoredTabhistoryShortcut.shortcut.key, modifiers: UDKey.showRestoredTabhistoryShortcut.shortcut.modifier)
                 .disabled(isTabHistoryDisabled())
-                Button("pip") {
-                    guard let contentViewModel = contentViewModel(for: appViewModel.currentlyActiveWindowId), let tab = contentViewModel.tabs.first(where: {$0.id == contentViewModel.currentTab}) else { return }
-                    tab.webViewModel.enablePictureInPicture()
-                }
-                .keyboardShortcut("p", modifiers: .command)
             }
         }
         Settings {

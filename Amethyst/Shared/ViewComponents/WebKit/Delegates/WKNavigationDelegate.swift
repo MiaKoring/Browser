@@ -47,6 +47,8 @@ extension WebViewModel: WKNavigationDelegate {
             print("Error: \(url.absoluteString)")
             self.currentURL = url
         }
+        if error.localizedDescription.contains("NSURLErrorDomain error -999") { return }
+        if ErrorIgnoreManager.isURLErrorIgnored(error) { return }
         self.error = error
     }
     
@@ -55,6 +57,10 @@ extension WebViewModel: WKNavigationDelegate {
             print("Error: \(url.absoluteString)")
             self.currentURL = url
         }
+        
+        if error.localizedDescription.contains("NSURLErrorDomain error -999") { return }
+        if ErrorIgnoreManager.isURLErrorIgnored(error) { return }
+        
         self.error = error
     }
     
