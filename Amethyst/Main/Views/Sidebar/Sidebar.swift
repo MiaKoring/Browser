@@ -84,11 +84,12 @@ extension Sidebar: View {
             
             ATabView()
                 .padding(-15)
+            DownloadOverviewButton()
             if(!AppViewModel.isDefaultBrowser()) {
                 Button("Set as default Browser") {
                     Task {
                         do {
-                            try? await NSWorkspace.shared.setDefaultApplication(at: Bundle.main.bundleURL, toOpenURLsWithScheme: "http")
+                            try await NSWorkspace.shared.setDefaultApplication(at: Bundle.main.bundleURL, toOpenURLsWithScheme: "http")
                         } catch {
                             print(error)
                         }

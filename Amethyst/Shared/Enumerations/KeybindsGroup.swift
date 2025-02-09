@@ -11,6 +11,7 @@ enum KeybindsGroup: String, CaseIterable {
     case search = "Search"
     case navigation = "Navigation"
     case archive = "Archive"
+    case view = "View"
 }
 
 extension KeybindsGroup {
@@ -22,6 +23,8 @@ extension KeybindsGroup {
             [.toggleSidebarShortcut, .toggleSidebarFixedShortcut]
         case .search:
             [.openSearchbarShortcut, .openInlineSearchShortcut]
+        case .view:
+            [.zoomInShortcut, .zoomOutShortcut, .resetZoomShortcut]
         case .navigation:
             [.goBackShortcut, .goForwardShortcut, .reloadShortcut, .reloadFromSourceShortcut, .previousTabShortcut, .nextTabShortcut, .closeCurrentTabShortcut]
         case .archive:

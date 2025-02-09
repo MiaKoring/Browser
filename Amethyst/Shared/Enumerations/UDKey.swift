@@ -24,6 +24,9 @@ enum UDKey: String, CaseIterable, UserDefaultWrapper {
     case closeCurrentTabShortcut
     case showRestoredTabhistoryShortcut
     case showHistoryShortcut
+    case zoomInShortcut
+    case zoomOutShortcut
+    case resetZoomShortcut
 }
 
 extension UDKey {
@@ -72,6 +75,12 @@ extension UDKey {
             Shortcut(key: "t", modifier: [.command, .shift])
         case .showHistoryShortcut:
             Shortcut(key: "y", modifier: .command)
+        case .zoomInShortcut:
+            Shortcut(key: "+", modifier: .command)
+        case .zoomOutShortcut:
+            Shortcut(key: "-", modifier: .command)
+        case .resetZoomShortcut:
+            Shortcut(key: "0", modifier: .command)
         default:
             Shortcut(key: " ", modifier: [])
         }
@@ -93,6 +102,9 @@ extension UDKey {
         case .closeCurrentTabShortcut: "Close Current Tab"
         case .showRestoredTabhistoryShortcut: "Show Restored Tabhistory"
         case .showHistoryShortcut: "Show History"
+        case .zoomInShortcut: "Zoom In"
+        case .zoomOutShortcut: "Zoom Out"
+        case .resetZoomShortcut: "Reset Zoom"
         default: ""
         }
     }

@@ -175,6 +175,24 @@ extension AmethystApp {
         contentViewModel.showHistory.toggle()
     }
     
+    func zoom(enlarge: Bool = true) {
+        guard let contentViewModel = contentViewModel(for: appViewModel.currentlyActiveWindowId), let webViewModel = contentViewModel.tabs.first(where: {$0.id == contentViewModel.currentTab})?.webViewModel else { return }
+        webViewModel.webView?.evaluateJavaScript("document.body.style.zoom = (parseFloat(document.body.style.zoom || 1.0) \(enlarge ? "+": "-") 0.1)") { (result, error) in
+            if let error = error {
+                print("Zoom \(enlarge ? "in": "out") error: \(error)")
+            }
+        }
+    }
+    
+    func resetZoom() {
+        guard let contentViewModel = contentViewModel(for: appViewModel.currentlyActiveWindowId), let webViewModel = contentViewModel.tabs.first(where: {$0.id == contentViewModel.currentTab})?.webViewModel else { return }
+        webViewModel.webView?.evaluateJavaScript("document.body.style.zoom = 1.0") { (result, error) in
+            if let error = error {
+                print("Zoom reset error: \(error)")
+            }
+        }
+    }
+    
     func contentViewModel(for id: String) -> ContentViewModel? {
         switch id {
         case "window1":
@@ -288,6 +306,21 @@ extension AmethystApp {
         if expectedShortcutMatchesEvent(expected: KeyboardShortcut(UDKey.toggleSidebarFixedShortcut.shortcut.key, modifiers: UDKey.toggleSidebarFixedShortcut.shortcut.modifier), event: event) {
             toggleSidebar(fix: true)
             return nil
+        }
+        
+        //Zoom in
+        if expectedShortcutMatchesEvent(expected: KeyboardShortcut(UDKey.zoomInShortcut.shortcut.key, modifiers: UDKey.zoomInShortcut.shortcut.modifier), event: event) {
+            zoom()
+        }
+        
+        //Zoom out
+        if expectedShortcutMatchesEvent(expected: KeyboardShortcut(UDKey.zoomOutShortcut.shortcut.key, modifiers: UDKey.zoomOutShortcut.shortcut.modifier), event: event) {
+            zoom(enlarge: false)
+        }
+        
+        //reset Zoom
+        if expectedShortcutMatchesEvent(expected: KeyboardShortcut(UDKey.resetZoomShortcut.shortcut.key, modifiers: UDKey.resetZoomShortcut.shortcut.modifier), event: event) {
+            resetZoom()
         }
         
         //new window
